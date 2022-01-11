@@ -492,6 +492,11 @@ for i in range(len(datastore)):
 
 
         if CheckZip(download_1_file)==0:
+            flag=""
+            flag=RuleLoader(download_1_platform)
+            if (flag!=""):
+                skipping_list_error=skipping_list_error+"Skipping download (reason : ZIP) : "+removeFrenchChars(name_software)+"/Flags : "+download_1_platform+" "+id_software+"\n"
+                print("seems to be a tape file but it's zipped")
             print("# zip (Skipping) id_software :"+id_software)
 
         if CheckDsk(download_1_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
