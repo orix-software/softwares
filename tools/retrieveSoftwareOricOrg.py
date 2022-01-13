@@ -14,6 +14,7 @@ from shutil import copyfile
 version_bin="0"
 destroot="../build/"
 dest="../build/usr/share/basic11/"
+dest_basic10="../build/usr/share/basic10/"
 
 destftdos="../build/usr/share/ftdos/"
 destsedoric="../build/usr/share/sedoric/"
@@ -27,6 +28,9 @@ destosid="../build/usr/share/osid/"
 basic_main_db="basic11.db"
 basic_main_db_indexed="basic11i.db"
 
+basic10_main_db="basic10.db"
+basic10_main_db_indexed="basic10i.db"
+
 basic_games_db="games.db"
 basic_demos_db="demos.db"
 basic_utils_db="utils.db"
@@ -34,6 +38,8 @@ basic_unsorted_db="unsorted.db"
 basic_music_db="music.db"
 
 destetc="../build/var/cache/basic11/"
+destetc_basic10="../build/var/cache/basic10/"
+
 destlauncher="../build/var/cache/loader/"
 destetcftdos="../build/var/cache/ftdos/"
 destetcsedoric="../build/var/cache/sedoric/"
@@ -75,6 +81,7 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace(u'\xaa', "u")
     mystr=mystr.replace(u'\xa7', "c")
     mystr=mystr.replace(u'\xa0', u'a')
+    mystr=mystr.replace(u'\xa2', u'a')
     mystr=mystr.replace(u'\xa8', u'e')
 
     mystr=mystr.replace(u'\xbb', u'c') # ç
@@ -235,6 +242,23 @@ def RuleLoader(flags_software):
     return flag
 
 
+def isOric1(flags_software):
+           # rules for software in the launcher ?
+            # Does the first download is an atmos mode ? 
+            # Yes we place it
+
+            # Definition of FLAGS
+            # A : Atmos and tape file
+            # O : Oric-1 and tape file
+    print("Flags ruleLoader : "+ flags_software)
+    flag=""
+    if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
+        flag='O'
+        
+        return flag
+    return flag
+
+
 
 def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
         b_obj_tape = BytesIO() 
@@ -356,6 +380,12 @@ if not os.path.exists(dest):
 if not os.path.exists(destetc):
     pathlib.Path(destetc).mkdir(parents=True)    
 
+# Basic10 path
+if not os.path.exists(dest_basic10):
+    pathlib.Path(dest_basic10).mkdir(parents=True)
+if not os.path.exists(destetc_basic10):
+    pathlib.Path(destetc_basic10).mkdir(parents=True)    
+
 # Launcher
 if not os.path.exists(destlauncher):
     pathlib.Path(destlauncher).mkdir(parents=True)        
@@ -403,6 +433,7 @@ datastore = json.loads(get_body.decode('utf8'))
 
 
 basic_main_db_str=""
+basic10_main_db_str=""
 game_db_str=""
 music_db_str=""
 demos_db_str=""
@@ -475,6 +506,8 @@ for i in range(len(datastore)):
         CreateTargetFolder(dest,destetc,letter)
        
 
+        if isOric1(download_1_platform):
+            CreateTargetFolder(dest_basic10,destetc_basic10,letter)
         
             
         
@@ -509,7 +542,11 @@ for i in range(len(datastore)):
             
             print("# tape")
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
-            basic_main_db_str=basic_main_db_str+addSoftware
+            if isOric1(download_1_platform):
+                basic10_main_db_str=basic10_main_db_str+addSoftware
+            else:
+                basic_main_db_str=basic_main_db_str+addSoftware
+
             lenAddSoftware+=len(addSoftware)
             main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
             flag=RuleLoader(download_1_platform)
@@ -632,6 +669,14 @@ f.write(DecimalToBinary(version_bin))
 f.write(bytearray(basic_main_db_str,'ascii'))
 f.write(DecimalToBinary(EOF))
 f.close()
+
+print("Write basic10 db")
+f = open(destetc_basic10+"/"+basic10_main_db, "wb")
+f.write(DecimalToBinary(version_bin))
+f.write(bytearray(basic10_main_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
 
 #print(main_db_table_software)
 # indexed
