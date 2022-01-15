@@ -506,9 +506,7 @@ for i in range(len(datastore)):
         CreateTargetFolder(dest,destetc,letter)
        
 
-        if isOric1(download_1_platform):
-            CreateTargetFolder(dest_basic10,destetc_basic10,letter)
-        
+
             
         
         print("###########################################################################################")
@@ -522,6 +520,11 @@ for i in range(len(datastore)):
         filename8plus3=fileToExecuteTruncateTo8Letters(filenametap)
         
         print("Filenametap : "+filenametap+" tail : "+tail+" tape file : "+tapefile)
+
+        if isOric1(download_1_platform):
+            CreateTargetFolder(dest_basic10,destetc_basic10,letter)
+            
+        
 
 
         if CheckZip(download_1_file)==0:
@@ -544,6 +547,8 @@ for i in range(len(datastore)):
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
             if isOric1(download_1_platform):
                 basic10_main_db_str=basic10_main_db_str+addSoftware
+                BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             else:
                 basic_main_db_str=basic_main_db_str+addSoftware
 
