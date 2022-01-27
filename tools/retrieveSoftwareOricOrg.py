@@ -31,6 +31,9 @@ basic_main_db_indexed="basic11i.db"
 basic10_main_db="basic10.db"
 basic10_main_db_indexed="basic10i.db"
 
+
+number_of_software_basic10=0
+number_of_software_basic11=0
 basic_games_db="games.db"
 basic_demos_db="demos.db"
 basic_utils_db="utils.db"
@@ -45,6 +48,8 @@ destetcftdos="../build/var/cache/ftdos/"
 destetcsedoric="../build/var/cache/sedoric/"
 
 skipping_problem_tape_filename="tape_error.txt"
+
+filename_no_support_for_software="software_error.txt"
 
 tmpfolderRetrieveSoftware="build/"
 list_file_for_md2hlp=""
@@ -237,8 +242,9 @@ def RuleLoader(flags_software):
     flag=""
     if (flags_software.find('A') != -1 and flags_software.find('K') != -1):
         flag='A'
-        
-        return flag
+    if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
+        flag='O'
+
     return flag
 
 
@@ -252,8 +258,8 @@ def isOric1(flags_software):
             # O : Oric-1 and tape file
     print("Flags ruleLoader : "+ flags_software)
     flag=""
-    if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
-        flag='O'
+    if (flags_software.find('A') != -1 and flags_software.find('K') != -1):
+        flag='A'
         
         return flag
     return flag
@@ -541,6 +547,30 @@ for i in range(len(datastore)):
         flag=""
         # Download 1
 
+        # Manage priority : 
+        # Atmos + tape if available is inserted (high priority)
+        # Oric-1 + tape lower priority than atmos
+        download_1_high_priority=0
+        download_2_high_priority=0
+        download_3_high_priority=0
+        
+        if (download_1_platform.find('A') != -1 and download_1_platform.find('K') != -1):
+            download_1_high_priority=1
+        else:
+            if (download_2_platform.find('A') != -1 and download_2_platform.find('K') != -1):
+                download_2_high_priority=1
+            else:
+                # Oric-1
+                if (download_1_platform.find('O') != -1 and download_1_platform.find('K') != -1):
+                    download_1_high_priority=1
+                else:
+                    if (download_2_platform.find('O') != -1 and download_2_platform.find('K') != -1):
+                        download_2_high_priority=1
+
+
+
+
+
         if CheckTape(download_1_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
             
             print("# tape")
@@ -548,17 +578,21 @@ for i in range(len(datastore)):
             if isOric1(download_1_platform):
                 basic10_main_db_str=basic10_main_db_str+addSoftware
                 BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                print("Adding "+filenametap8bytesLength+"to basic10 command")
+                number_of_software_basic10=number_of_software_basic10+1
                 #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             else:
                 basic_main_db_str=basic_main_db_str+addSoftware
+                print("Adding "+filenametap8bytesLength+"to basic11 command")
+                number_of_software_basic11=number_of_software_basic11+1
 
             lenAddSoftware+=len(addSoftware)
             main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
             flag=RuleLoader(download_1_platform)
-            if (flag!=""):
+            if (download_1_high_priority==1):
                 addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_1_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
                 matchRule=1
-                print("Inserting first download 1 for : "+name_software)
+                print("[Loader] Inserting first download 1 for : "+removeFrenchChars(name_software)+" flags : "+flag)
                 if category_software=="1" and addSoftwareLauncher!="":
                     game_db_str=game_db_str+addSoftwareLauncher
                     nb_of_games=nb_of_games+1
@@ -617,12 +651,22 @@ for i in range(len(datastore)):
             print("# tape")
 
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
-            basic_main_db_str=basic_main_db_str+addSoftware
+            if isOric1(download_2_platform):
+                basic10_main_db_str=basic10_main_db_str+addSoftware
+                BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                print("Adding (download2)"+filenametap8bytesLength+"to basic10 command")
+                number_of_software_basic10=number_of_software_basic10+1
+                #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+            else:
+                basic_main_db_str=basic_main_db_str+addSoftware
+                print("Adding (download2)"+filenametap8bytesLength+"to basic11 command")
+                number_of_software_basic11=number_of_software_basic11+1
+
             lenAddSoftware+=len(addSoftware)
             main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
             flag=RuleLoader(download_2_platform)
-            if (flag!=""):
-                print("Inserting first download 2 for : "+name_software)
+            if (download_2_high_priority==1):
+                print("[Loader] Inserting first download 2 for : "+removeFrenchChars(name_software)+" flag : "+flag)
                 addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_2_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
                 matchRule=1
                 if category_software=="1" and addSoftwareLauncher!="":
@@ -665,17 +709,17 @@ for i in range(len(datastore)):
                 print("Skipping second download, not .tap file found : "+removeFrenchChars(name_software))
                 skipping_list_error=skipping_list_error+"Skipping second download : "+removeFrenchChars(name_software)+"/Flags : "+download_2_platform+" "+id_software+"\n"
 
-
-
-EOF=0xFF            
-print("Write basic11 db")
+            if download_1_high_priority==0 and download_2_high_priority==0:
+                print("!!!Error!!! No compatible support found for : "+removeFrenchChars(name_software))
+EOF=0xFF
+print("Write basic11 db"+str(number_of_software_basic11))
 f = open(destetc+"/"+basic_main_db, "wb")
 f.write(DecimalToBinary(version_bin))
 f.write(bytearray(basic_main_db_str,'ascii'))
 f.write(DecimalToBinary(EOF))
 f.close()
 
-print("Write basic10 db")
+print("Write basic10 db/nb : "+str(number_of_software_basic10))
 f = open(destetc_basic10+"/"+basic10_main_db, "wb")
 f.write(DecimalToBinary(version_bin))
 f.write(bytearray(basic10_main_db_str,'ascii'))
