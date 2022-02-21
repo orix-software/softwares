@@ -7,11 +7,15 @@ import os, sys
 from io import BytesIO 
 import pathlib
 import re
+from datetime import date
+
+
 
 
 from shutil import copyfile
 
 version_bin="0"
+version_bin_v2="1"
 destroot="../build/"
 dest="../build/usr/share/basic11/"
 dest_basic10="../build/usr/share/basic10/"
@@ -31,6 +35,7 @@ basic_main_db_indexed="basic11i.db"
 basic10_main_db="basic10.db"
 basic10_main_db_indexed="basic10i.db"
 
+number_of_db_part=1
 
 number_of_software_basic10=0
 number_of_software_basic11=0
@@ -40,14 +45,24 @@ basic_utils_db="utils.db"
 basic_unsorted_db="unsorted.db"
 basic_music_db="music.db"
 
+basic_games_db_v2="games2.db"
+basic_demos_db_v2="demos2.db"
+basic_utils_db_v2="utils2.db"
+basic_unsorted_db_v2="unsortd2.db"
+basic_music_db_v2="music2.db"
+
 destetc="../build/var/cache/basic11/"
 destetc_basic10="../build/var/cache/basic10/"
+destetc_roms="../build/etc/systemd/"
+roms_banks_cnf=""
 
 destlauncher="../build/var/cache/loader/"
 destetcftdos="../build/var/cache/ftdos/"
 destetcsedoric="../build/var/cache/sedoric/"
 
 skipping_problem_tape_filename="tape_error.txt"
+
+ 
 
 filename_no_support_for_software="software_error.txt"
 
@@ -58,6 +73,16 @@ nb_of_unsorted=0
 nb_of_music=0
 nb_of_demo=0
 nb_of_tools=0
+nb_of_roms=0
+
+def computeVersion():
+   # for m in range(1, 13):
+    today = date.today()
+    month=int(today.strftime("%m"))
+    quarter=str(((month*3)//10)+1)
+    
+    strversion = today.strftime("%Y."+quarter+".%m.%d")
+    return strversion
 
 def buildDbFileSoftwareSingle(destetc,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     print("Writting db file : "+destetc+"/"+letter+"/"+filenametap8bytesLength+".db")
@@ -92,6 +117,8 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace(u'\xbb', u'c') # ç
     mystr=mystr.replace(u'\xb9', u'u') # ù
     mystr=mystr.replace(u'\xb4', u'o') # ù
+
+    mystr=mystr.replace(u'\xeb', u'e') # ù
     
     
 
@@ -158,7 +185,7 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
     #md_software=md_software+"Origin : "+programmer_software+"\n"
     md_software=md_software+"Informations : "+removeFrenchChars(junk_software)+"\n"
             
-    print(md_software)
+    #print(md_software)
             
     md=filenametap8bytesLength+".md"
     file_md_path=dest+"/"+letter+"/"+md
@@ -174,7 +201,7 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
 
 def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     CreateTargetFolder(destpath,destetc,letter)
-    print("Copying dsk : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
+    print("[DSK]Copying dsk : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
     if not os.path.exists(destetc+"/"+letter):
         os.mkdir(destetc+"/"+letter)
@@ -230,6 +257,20 @@ def CheckTape(filename,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8by
         return 0
     return 1
 
+
+def  BuildRom(download_label,name_software,cnf,download_file,tmpfolderRetrieveSoftware,destpath,letter,filenametap8bytesLength):
+    # remove rom in the name
+    name_software=name_software.replace(" ROMS","")
+    name_software=name_software.replace(" ROM","")
+    
+    cnf=cnf+"["+name_software+" ("+download_label+")"+"]"
+    cnf=cnf+"\n"
+    cnf=cnf+"path=/usr/share/roms/"+letter+"/"+filenametap8bytesLength+".rom"+"\n"
+    print("[ROM] Copying ROM : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".rom" )
+    copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+"rom")
+    
+    return cnf
+
 def RuleLoader(flags_software):
            # rules for software in the launcher ?
             # Does the first download is an atmos mode ? 
@@ -240,15 +281,34 @@ def RuleLoader(flags_software):
             # O : Oric-1 and tape file
     print("Flags ruleLoader : "+ flags_software)
     flag=""
+    # Priority : Atmos
     if (flags_software.find('A') != -1 and flags_software.find('K') != -1):
-        flag='A'
+        return 'A'
+
     if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
-        flag='O'
+        return 'O'
 
     return flag
 
 
 def isOric1(flags_software):
+           # rules for software in the launcher ?
+            # Does the first download is an atmos mode ? 
+            # Yes we place it
+
+            # Definition of FLAGS
+            # A : Atmos and tape file
+            # O : Oric-1 and tape file
+    print("Flags ruleLoader : "+ flags_software)
+    flag=""
+    if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
+        flag='O'
+        
+        return flag
+    return flag
+
+
+def isAtmos(flags_software):
            # rules for software in the launcher ?
             # Does the first download is an atmos mode ? 
             # Yes we place it
@@ -264,6 +324,22 @@ def isOric1(flags_software):
         return flag
     return flag
 
+def isRom(flags_software):
+           # rules for software in the launcher ?
+            # Does the first download is an atmos mode ? 
+            # Yes we place it
+
+            # Definition of FLAGS
+            # A : Atmos and tape file
+            # O : Oric-1 and tape file
+    
+    flag=""
+    if (flags_software.find('R') != -1):
+        flag='R'
+        print("Is ROM : "+ flags_software)
+        
+        return flag
+    return flag
 
 
 def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
@@ -309,17 +385,17 @@ def CheckDsk(download_platform_software,letter,destftdos,destetcftdos,name_softw
     extension=download_platform_software[-3:].lower()
     if extension=="dsk":
         match = re.search('J', download_platform_software)
-        print("download_platform_software"+download_platform_software)
+        print("[DSK] download_platform_software : "+download_platform_software)
         if match:
             # Jasmin
-            print ('# jasmin/ftdos dsk file')
+            print ('[DSK] jasmin/ftdos dsk file')
             BuildDsk(download_platform_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             return 0
 
         match = re.search('S', download_platform_software)
         if match:
             # Sedoric
-            print ('# Sedoric dsk file')
+            print ('[DSK] Sedoric dsk file')
             BuildDsk(download_platform_software,letter,destsedoric,destetcsedoric,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             return 0
     return 1
@@ -335,10 +411,10 @@ def CreateTargetFolder(dest,destetc,letter):
     folderdb=destetc+'/'+letter
     #print(folder)
     directory = os.path.dirname(folder)
-    if not os.path.exists(folder):
+    if not os.path.exists(folder) and folder!="":
         os.mkdir(folder)
         print("######################## Create "+folder)
-    if not os.path.exists(folderdb):
+    if not os.path.exists(folderdb) and folderdb!="":
         os.mkdir(folderdb)
         print("######################## Create "+folderdb)
 
@@ -379,6 +455,162 @@ def KeyboardMatrix(num):
     key=keyboardMatrixTab[int(num)]
     return DecimalToBinary(key)
 
+def manage_download(download_file,download_platform,download_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,id_download):
+    global roms_banks_cnf
+    global nb_of_roms
+    global skipping_list_error_txt
+    global destftdos
+    global destetc_basic10
+    global dest_basic10
+    global destroot
+    global destetc
+    global number_of_software_basic10
+    global basic_main_db_str
+    global number_of_software_basic11
+    global lenAddSoftware
+    global addSoftwareLauncher
+    global game_db_str
+    global nb_of_games
+    global utils_db_str
+    global nb_of_tools
+    global demos_db_str
+    global nb_of_demo
+    global unsorted_db_str
+    global nb_of_unsorted
+    global music_db_str
+    global nb_of_music
+    global basic10_main_db_str
+    global basic11_main_db_str
+    global skipping_list_error
+    global download_1_high_priority
+    global download_2_high_priority
+    global download_3_high_priority
+    global download_4_high_priority
+    global download_5_high_priority
+    global download_6_high_priority
+    global download_7_high_priority
+
+
+    if download_file!="":
+        RetriveSoftwareInTmpFolder(download_file,tmpfolderRetrieveSoftware)
+        extension=download_file[-3:].lower()
+        head, tail = os.path.split(download_file)
+        letter=tail[0:1].lower()
+
+        CreateTargetFolder(dest,destetc,letter)
+        print("###########################################################################################")
+        print("[DOWNLOAD_"+str(id_download)+"] Generating : "+name_software+"/"+id_software)
+        filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
+        tcnf=filenametap.split('.')
+        filenametapext=tcnf[1]
+        cnf=tcnf[0]+".db"
+        filenametapbase=tcnf[0]
+        filenametap8bytesLength=filenametapbase[0:8]
+        filename8plus3=fileToExecuteTruncateTo8Letters(filenametap)
+        skipping_list_error_txt=""
+        print("[DOWNLOAD_"+str(id_download)+"] Filename : "+filenametap+" tail : "+tail+"  file : "+tapefile)
+        if isOric1(download_platform):
+            CreateTargetFolder(dest_basic10,destetc_basic10,letter)
+        
+        if isRom(download_platform):
+            if filenametapext=="rom":
+                CreateTargetFolder(destroms,"",letter)
+                roms_banks_cnf=BuildRom(download_label,name_software,roms_banks_cnf,download_file,tmpfolderRetrieveSoftware,destroms,letter,filenametap8bytesLength)
+                nb_of_roms=nb_of_roms+1
+            else:
+                print("[ROM][DOWNLOAD_"+str(id_download)+"] is not a .rom extension")
+            return ""
+
+        if CheckZip(download_file)==0:
+            flag=""
+            flag=RuleLoader(download_platform)
+            if (flag!=""):
+                skipping_list_error_txt="[ZIP][DOWNLOAD_"+str(id_download)+"] Skipping download (reason : ZIP) : "+removeFrenchChars(name_software)+"/Flags : "+download_1_platform+" "+id_software+"\n"
+                print("[ZIP][DOWNLOAD_"+str(id_download)+"] seems to be a tape file but it's zipped")
+            print("[ZIP][DOWNLOAD_"+str(id_download)+"] zip (Skipping) id_software :"+id_software)
+            return ""
+
+        if CheckDsk(download_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
+            print("[DSK][DOWNLOAD_"+str(id_download)+"] Id_software:"+id_software)
+            return ""
+
+        matchRule=0
+        flag=""
+        if CheckTape(download_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
+            
+            print("[TAPE][DOWNLOAD_"+str(id_download)+"] Check tape download")
+            addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
+            if isOric1(download_platform):
+                basic10_main_db_str=basic10_main_db_str+addSoftware
+                BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                print("[TAPE][DOWNLOAD_"+str(id_download)+"][BASIC10] Adding "+filenametap8bytesLength+" to basic10 command")
+                number_of_software_basic10=number_of_software_basic10+1
+                #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+            if isAtmos(download_platform):
+                basic_main_db_str=basic_main_db_str+addSoftware
+                print("[TAPE][DOWNLOAD_"+str(id_download)+"][BASIC11] Adding "+filenametap8bytesLength+" to basic11 command")
+                number_of_software_basic11=number_of_software_basic11+1
+
+            lenAddSoftware+=len(addSoftware)
+            main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
+            flag=RuleLoader(download_platform)
+            if (download_1_high_priority==1):
+                addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
+                matchRule=1
+                print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Inserting download "+str(id_download)+" for ("+removeFrenchChars(name_software)+") with flags : "+flag)
+                if category_software=="1" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category game in loader db")
+                    game_db_str=game_db_str+addSoftwareLauncher
+                    nb_of_games=nb_of_games+1
+                if category_software=="2" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
+                    utils_db_str=utils_db_str+addSoftwareLauncher
+                    nb_of_tools=nb_of_tools+1                
+                #Tape ins game
+                if category_software=="3" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category game in loader db")
+                    game_db_str=game_db_str+addSoftwareLauncher
+                    nb_of_games=nb_of_games+1                
+                # Tape ins utility
+                if category_software=="4" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
+                    utils_db_str=utils_db_str+addSoftwareLauncher
+                    nb_of_tools=nb_of_tools+1
+                # Tape ins unknow category set to utils
+                if category_software=="5" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
+                    utils_db_str=utils_db_str+addSoftwareLauncher
+                    nb_of_tools=nb_of_tools+1                
+                if category_software=="6" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category dem in loader db")
+                    demos_db_str=demos_db_str+addSoftwareLauncher          
+                    nb_of_demo=nb_of_demo+1
+                if category_software=="7" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category unsorted in loader db")
+                    unsorted_db_str=unsorted_db_str+addSoftwareLauncher
+                    nb_of_unsorted=nb_of_unsorted+1
+                # Game from book
+                if category_software=="8" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category games in loader db")
+                    game_db_str=game_db_str+addSoftwareLauncher
+                    nb_of_games=nb_of_games+1
+                # Tape ins book utility
+                if category_software=="9" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category utils in loader db")
+                    utils_db_str=utils_db_str+addSoftwareLauncher
+                    nb_of_tools=nb_of_tools+1                
+                if category_software=="10" and addSoftwareLauncher!="":
+                    print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category music in loader db")
+                    music_db_str=music_db_str+addSoftwareLauncher
+                    nb_of_music=nb_of_music+1
+            #else:
+            #    print("[TAPE][DOWNLOAD_1] Skipping first download trying second download : "+removeFrenchChars(name_software))
+            #    skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_platform+" "+id_software+"\n"
+
+        
+
+
+
 
 exist_ok=True
 if not os.path.exists(dest):
@@ -392,6 +624,13 @@ if not os.path.exists(dest_basic10):
 if not os.path.exists(destetc_basic10):
     pathlib.Path(destetc_basic10).mkdir(parents=True)    
 
+# Roms path
+if not os.path.exists(destroms):
+    pathlib.Path(destroms).mkdir(parents=True)
+if not os.path.exists(destetc_roms):
+    pathlib.Path(destetc_roms).mkdir(parents=True)    
+
+
 # Launcher
 if not os.path.exists(destlauncher):
     pathlib.Path(destlauncher).mkdir(parents=True)        
@@ -404,6 +643,8 @@ if not os.path.exists(destftdos):
 if not os.path.exists(destetcftdos):
     pathlib.Path(destetcftdos).mkdir(parents=True)    
 
+#skipping_problem_tape_filename
+
 # sedoric
 if not os.path.exists(destsedoric):
     pathlib.Path(destsedoric).mkdir(parents=True)
@@ -412,6 +653,8 @@ if not os.path.exists(destetcsedoric):
 
 if not os.path.exists(tmpfolderRetrieveSoftware):
     pathlib.Path(tmpfolderRetrieveSoftware).mkdir(parents=True)    
+
+print(computeVersion())
 
 print("Retrieve json file from oric.org ...")
 b_obj = BytesIO() 
@@ -466,11 +709,27 @@ for i in range(len(datastore)):
     download_1_platform=datastore[i]["platform_software"]
     download_2_platform=datastore[i]["second_download_platform_software"]
     download_3_platform=datastore[i]["download_3_platform"]
+    download_4_platform=datastore[i]["download_4_platform"]
+    download_5_platform=datastore[i]["download_5_platform"]
+    download_6_platform=datastore[i]["download_6_platform"]    
+    download_7_platform=datastore[i]["download_7_platform"]
     
     download_1_file=datastore[i]["download_software"]
     download_2_file=datastore[i]["second_download_software"]
     download_3_file=datastore[i]["download_3_path"]
+    download_4_file=datastore[i]["download_4_path"]
+    download_5_file=datastore[i]["download_5_path"]
+    download_6_file=datastore[i]["download_6_path"]
+    download_7_file=datastore[i]["download_7_path"]
     
+    download_1_label=datastore[i]["download_1_label"]
+    download_2_label=datastore[i]["download_2_label"]
+    download_3_label=datastore[i]["download_3_label"]
+    download_4_label=datastore[i]["download_4_label"]
+    download_5_label=datastore[i]["download_5_label"]
+    download_6_label=datastore[i]["download_6_label"]
+    download_7_label=datastore[i]["download_7_label"]    
+
     category_software=datastore[i]["category_software"]
     junk_software=datastore[i]["junk_software"]
     date_software=datastore[i]["date_software"]
@@ -529,7 +788,14 @@ for i in range(len(datastore)):
 
         if isOric1(download_1_platform):
             CreateTargetFolder(dest_basic10,destetc_basic10,letter)
-            
+
+        if isRom(download_1_platform):
+            if filenametapext=="rom":
+                CreateTargetFolder(destroms,"",letter)
+                roms_banks_cnf=BuildRom(download_1_label,name_software,roms_banks_cnf,download_1_file,tmpfolderRetrieveSoftware,destroms,letter,filenametap8bytesLength)
+                nb_of_roms=nb_of_roms+1
+            else:
+                print("[ROM] is not a .rom extension")
         
 
 
@@ -538,11 +804,11 @@ for i in range(len(datastore)):
             flag=RuleLoader(download_1_platform)
             if (flag!=""):
                 skipping_list_error=skipping_list_error+"Skipping download (reason : ZIP) : "+removeFrenchChars(name_software)+"/Flags : "+download_1_platform+" "+id_software+"\n"
-                print("seems to be a tape file but it's zipped")
-            print("# zip (Skipping) id_software :"+id_software)
+                print("[ZIP] seems to be a tape file but it's zipped")
+            print("[ZIP] zip (Skipping) id_software :"+id_software)
 
         if CheckDsk(download_1_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
-            print("# Dsk :"+id_software)
+            print("[DSK] Id_software:"+id_software)
         matchRule=0
         flag=""
         # Download 1
@@ -553,6 +819,7 @@ for i in range(len(datastore)):
         download_1_high_priority=0
         download_2_high_priority=0
         download_3_high_priority=0
+        download_4_high_priority=0
         
         if (download_1_platform.find('A') != -1 and download_1_platform.find('K') != -1):
             download_1_high_priority=1
@@ -573,17 +840,17 @@ for i in range(len(datastore)):
 
         if CheckTape(download_1_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
             
-            print("# tape")
+            print("[TAPE][DOWNLOAD_1] Check tape download 1")
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
             if isOric1(download_1_platform):
                 basic10_main_db_str=basic10_main_db_str+addSoftware
                 BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
-                print("Adding "+filenametap8bytesLength+"to basic10 command")
+                print("[TAPE][DOWNLOAD_1][ORIC1] Adding "+filenametap8bytesLength+"to basic10 command")
                 number_of_software_basic10=number_of_software_basic10+1
                 #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
-            else:
+            if isAtmos(download_1_platform):
                 basic_main_db_str=basic_main_db_str+addSoftware
-                print("Adding "+filenametap8bytesLength+"to basic11 command")
+                print("[TAPE][DOWNLOAD_1][ATMOS] Adding "+filenametap8bytesLength+"to basic11 command")
                 number_of_software_basic11=number_of_software_basic11+1
 
             lenAddSoftware+=len(addSoftware)
@@ -592,7 +859,7 @@ for i in range(len(datastore)):
             if (download_1_high_priority==1):
                 addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_1_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
                 matchRule=1
-                print("[Loader] Inserting first download 1 for : "+removeFrenchChars(name_software)+" flags : "+flag)
+                print("[TAPE][DOWNLOAD_1] Inserting download 1 for ("+removeFrenchChars(name_software)+") with flags : "+flag)
                 if category_software=="1" and addSoftwareLauncher!="":
                     game_db_str=game_db_str+addSoftwareLauncher
                     nb_of_games=nb_of_games+1
@@ -626,11 +893,11 @@ for i in range(len(datastore)):
                     utils_db_str=utils_db_str+addSoftwareLauncher
                     nb_of_tools=nb_of_tools+1                
                 if category_software=="10" and addSoftwareLauncher!="":
-                    print("########### Add music")
+                    print("[TAPE][DOWNLOAD_1] Add in category music in loader db")
                     music_db_str=music_db_str+addSoftwareLauncher
                     nb_of_music=nb_of_music+1
             else:
-                print("Skipping first download trying second download : "+removeFrenchChars(name_software))
+                print("[TAPE][DOWNLOAD_1] Skipping first download trying second download : "+removeFrenchChars(name_software))
                 skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_1_platform+" "+id_software+"\n"
 
 
@@ -645,72 +912,85 @@ for i in range(len(datastore)):
             filenametap8bytesLength=filenametapbase[0:8]
             RetriveSoftwareInTmpFolder(download_2_file,tmpfolderRetrieveSoftware)
 
+            if isRom(download_2_platform):
+                if filenametapext=="rom":
+                    CreateTargetFolder(destroms,"",letter)
+                    roms_banks_cnf=BuildRom(download_2_label,name_software,roms_banks_cnf,download_2_file,tmpfolderRetrieveSoftware,destroms,letter,filenametap8bytesLength)
+                    nb_of_roms=nb_of_roms+1
+                else:
+                    print("[ROM][DOWNLOAD2] is not a .rom extension")
             
             
-        if flag=="" and CheckTape(download_2_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
-            print("# tape")
+            if flag=="" and CheckTape(download_2_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
+                
 
-            addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
-            if isOric1(download_2_platform):
-                basic10_main_db_str=basic10_main_db_str+addSoftware
-                BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
-                print("Adding (download2)"+filenametap8bytesLength+"to basic10 command")
-                number_of_software_basic10=number_of_software_basic10+1
-                #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
-            else:
-                basic_main_db_str=basic_main_db_str+addSoftware
-                print("Adding (download2)"+filenametap8bytesLength+"to basic11 command")
-                number_of_software_basic11=number_of_software_basic11+1
+                addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
+                if isOric1(download_2_platform):
+                    basic10_main_db_str=basic10_main_db_str+addSoftware
+                    BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                    print("[TAPE][DOWNLOAD_2][ORIC1] Adding (download2) "+filenametap8bytesLength+" to basic10 command")
+                    number_of_software_basic10=number_of_software_basic10+1
+                    #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+                if isAtmos(download_2_platform):
+                    basic_main_db_str=basic_main_db_str+addSoftware
+                    print("[TAPE][DOWNLOAD_2][ATMOS] Adding (download2)"+filenametap8bytesLength+"to basic11 command")
+                    number_of_software_basic11=number_of_software_basic11+1
 
-            lenAddSoftware+=len(addSoftware)
-            main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
-            flag=RuleLoader(download_2_platform)
-            if (download_2_high_priority==1):
-                print("[Loader] Inserting first download 2 for : "+removeFrenchChars(name_software)+" flag : "+flag)
-                addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_2_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
-                matchRule=1
-                if category_software=="1" and addSoftwareLauncher!="":
-                    game_db_str=game_db_str+addSoftwareLauncher
-                    nb_of_games=nb_of_games+1
-                if category_software=="2" and addSoftwareLauncher!="":
-                    utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
-                #Tape ins game
-                if category_software=="3" and addSoftwareLauncher!="":
-                    game_db_str=game_db_str+addSoftwareLauncher
-                    nb_of_games=nb_of_games+1                
-                # Tape ins utility
-                if category_software=="4" and addSoftwareLauncher!="":
-                    utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1
-                # Tape ins unknow category set to utils
-                if category_software=="5" and addSoftwareLauncher!="":
-                    utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
-                if category_software=="6" and addSoftwareLauncher!="":
-                    demos_db_str=demos_db_str+addSoftwareLauncher          
-                    nb_of_demo=nb_of_demo+1
-                if category_software=="7" and addSoftwareLauncher!="":
-                    unsorted_db_str=unsorted_db_str+addSoftwareLauncher
-                    nb_of_unsorted=nb_of_unsorted+1
-                # Game from book
-                if category_software=="8" and addSoftwareLauncher!="":
-                    game_db_str=game_db_str+addSoftwareLauncher
-                    nb_of_games=nb_of_games+1
-                # Tape ins book utility
-                if category_software=="9" and addSoftwareLauncher!="":
-                    utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
-                if category_software=="10" and addSoftwareLauncher!="":
-                    print("########### Add music")
-                    music_db_str=music_db_str+addSoftwareLauncher
-                    nb_of_music=nb_of_music+1
-            else:
-                print("Skipping second download, not .tap file found : "+removeFrenchChars(name_software))
-                skipping_list_error=skipping_list_error+"Skipping second download : "+removeFrenchChars(name_software)+"/Flags : "+download_2_platform+" "+id_software+"\n"
+                lenAddSoftware+=len(addSoftware)
+                main_db_table_software.append(lenAddSoftware.to_bytes(2, 'little'))
+                flag=RuleLoader(download_2_platform)
+                if (download_2_high_priority==1):
+                    print("[TAPE][DOWNLOAD_2] Inserting download 2 in loader db for ("+removeFrenchChars(name_software)+") with flag : "+flag)
+                    addSoftwareLauncher=fileToExecuteTruncateTo8Letters(download_2_file)+';'+removeFrenchChars(name_software)+';'+flag+';\0'
+                    matchRule=1
+                    if category_software=="1" and addSoftwareLauncher!="":
+                        game_db_str=game_db_str+addSoftwareLauncher
+                        nb_of_games=nb_of_games+1
+                    if category_software=="2" and addSoftwareLauncher!="":
+                        utils_db_str=utils_db_str+addSoftwareLauncher
+                        nb_of_tools=nb_of_tools+1                
+                    #Tape ins game
+                    if category_software=="3" and addSoftwareLauncher!="":
+                        game_db_str=game_db_str+addSoftwareLauncher
+                        nb_of_games=nb_of_games+1                
+                    # Tape ins utility
+                    if category_software=="4" and addSoftwareLauncher!="":
+                        utils_db_str=utils_db_str+addSoftwareLauncher
+                        nb_of_tools=nb_of_tools+1
+                    # Tape ins unknow category set to utils
+                    if category_software=="5" and addSoftwareLauncher!="":
+                        utils_db_str=utils_db_str+addSoftwareLauncher
+                        nb_of_tools=nb_of_tools+1                
+                    if category_software=="6" and addSoftwareLauncher!="":
+                        demos_db_str=demos_db_str+addSoftwareLauncher          
+                        nb_of_demo=nb_of_demo+1
+                    if category_software=="7" and addSoftwareLauncher!="":
+                        unsorted_db_str=unsorted_db_str+addSoftwareLauncher
+                        nb_of_unsorted=nb_of_unsorted+1
+                    # Game from book
+                    if category_software=="8" and addSoftwareLauncher!="":
+                        game_db_str=game_db_str+addSoftwareLauncher
+                        nb_of_games=nb_of_games+1
+                    # Tape ins book utility
+                    if category_software=="9" and addSoftwareLauncher!="":
+                        utils_db_str=utils_db_str+addSoftwareLauncher
+                        nb_of_tools=nb_of_tools+1                
+                    if category_software=="10" and addSoftwareLauncher!="":
+                        print("########### Add music")
+                        music_db_str=music_db_str+addSoftwareLauncher
+                        nb_of_music=nb_of_music+1
+                else:
+                    print("Skipping second download, not .tap file found : "+removeFrenchChars(name_software))
+                    skipping_list_error=skipping_list_error+"Skipping second download : "+removeFrenchChars(name_software)+"/Flags : "+download_2_platform+" "+id_software+"\n"
 
-            if download_1_high_priority==0 and download_2_high_priority==0:
-                print("!!!Error!!! No compatible support found for : "+removeFrenchChars(name_software))
+                if download_1_high_priority==0 and download_2_high_priority==0:
+                    print("!!!Error!!! No compatible support found for : "+removeFrenchChars(name_software))
+
+        manage_download(download_3_file,download_3_platform,download_3_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,3)
+        manage_download(download_4_file,download_4_platform,download_4_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,4)
+        manage_download(download_5_file,download_5_platform,download_5_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,5)
+        manage_download(download_6_file,download_6_platform,download_6_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,6)
+        manage_download(download_7_file,download_7_platform,download_7_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,7)
 EOF=0xFF
 print("Write basic11 db"+str(number_of_software_basic11))
 f = open(destetc+"/"+basic_main_db, "wb")
@@ -735,6 +1015,8 @@ f.write(bytearray(basic_main_db_str,'ascii'))
 f.write(DecimalToBinary(EOF))
 f.close()
 
+# V0 loader
+
 print("Write basic_games_db/nb : "+str(nb_of_games))
 f = open(destlauncher+"/"+basic_games_db, "wb")
 f.write(DecimalToBinary(version_bin))
@@ -742,6 +1024,7 @@ f.write(DecimalTo16bits(nb_of_games))
 f.write(bytearray(game_db_str,'ascii'))
 f.write(DecimalToBinary(EOF))
 f.close()
+
 
 
 print("Write basic_demos_db/nb : "+str(nb_of_demo))
@@ -775,6 +1058,73 @@ f.write(DecimalTo16bits(nb_of_music))
 f.write(bytearray(music_db_str,'ascii'))
 f.write(DecimalToBinary(EOF))
 f.close()
+
+print("Write roms/nb : "+str(nb_of_roms))
+f = open(destetc_roms+"/bankstmp.cnf", "wb")
+f.write(bytearray(roms_banks_cnf,'ascii'))
+f.close()
+
+
+# V1 loader
+
+print("Write basic_games_db V2 /nb : "+str(nb_of_games))
+f = open(destlauncher+"/"+basic_games_db_v2, "wb")
+f.write(DecimalToBinary(version_bin_v2))
+f.write(DecimalToBinary(number_of_db_part))
+f.write(bytearray(computeVersion(),'ascii'))
+f.write(DecimalTo16bits(nb_of_games))
+f.write(bytearray(game_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
+
+
+print("Write basic_demos_db V2/nb : "+str(nb_of_demo))
+f = open(destlauncher+"/"+basic_demos_db_v2, "wb")
+f.write(DecimalToBinary(version_bin_v2))
+f.write(DecimalToBinary(number_of_db_part))
+f.write(bytearray(computeVersion(),'ascii'))
+f.write(DecimalTo16bits(nb_of_demo))
+f.write(bytearray(demos_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
+print("Write basic_utils_db V2/nb : "+str(nb_of_tools))
+f = open(destlauncher+"/"+basic_utils_db_v2, "wb")
+f.write(DecimalToBinary(version_bin_v2))
+f.write(DecimalToBinary(number_of_db_part))
+f.write(bytearray(computeVersion(),'ascii'))
+f.write(DecimalTo16bits(nb_of_tools))
+f.write(bytearray(utils_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
+print("Write basic_unsorted_db v2")
+f = open(destlauncher+"/"+basic_unsorted_db_v2, "wb")
+f.write(DecimalToBinary(version_bin_v2))
+f.write(DecimalToBinary(number_of_db_part))
+f.write(bytearray(computeVersion(),'ascii'))
+f.write(DecimalTo16bits(nb_of_unsorted))
+f.write(bytearray(unsorted_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
+print("Write basic_music_db/nb v2: "+str(nb_of_music))
+f = open(destlauncher+"/"+basic_music_db_v2, "wb")
+f.write(DecimalToBinary(version_bin_v2))
+f.write(DecimalToBinary(number_of_db_part))
+f.write(bytearray(computeVersion(),'ascii'))
+f.write(DecimalTo16bits(nb_of_music))
+f.write(bytearray(music_db_str,'ascii'))
+f.write(DecimalToBinary(EOF))
+f.close()
+
+#print("Write roms/nb V2 : "+str(nb_of_roms))
+#f = open(destetc_roms+"/bankstmp.cnf", "wb")
+#f.write(bytearray(roms_banks_cnf,'ascii'))
+#f.close()
+
+
 
 print("Write skipping_problem_tape_filename")
 f = open(skipping_problem_tape_filename, "wb")
