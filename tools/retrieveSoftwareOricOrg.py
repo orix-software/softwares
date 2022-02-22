@@ -112,25 +112,27 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace(u'\xa7', "c")
     mystr=mystr.replace(u'\xa0', u'a')
     mystr=mystr.replace(u'\xa2', u'a')
-    mystr=mystr.replace(u'\xa8', u'e')
+    mystr=mystr.replace(u'\xa8', u'e') # e tréma
 
     mystr=mystr.replace(u'\xbb', u'c') # ç
     mystr=mystr.replace(u'\xb9', u'u') # ù
     mystr=mystr.replace(u'\xb4', u'o') # ù
 
-    mystr=mystr.replace(u'\xeb', u'e') # ù
+    mystr=mystr.replace(u'\xeb', u'e') # e tréma lower case
+    mystr=mystr.replace(u'\xe8', u'e') # è
     
+    mystr=mystr.replace("Ã¨", "e") # è pour mystère de Kikekankoi
     
 
     mystr=mystr.replace("Ã©", "e")
     mystr=mystr.replace("é", "e")
-    mystr=mystr.replace("è", "e")
+
     mystr=mystr.replace("ê", "e")
     mystr=mystr.replace("ë", "e")
     mystr=mystr.replace("ç", "c")
     mystr=mystr.replace("°", " ")
     mystr=mystr.replace("Â", " ")
-    mystr=mystr.replace("e¨", "e")
+
 
     mystr=mystr.replace("à", "a")
     mystr=mystr.replace("â", "a")
@@ -508,7 +510,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
         filenametap8bytesLength=filenametapbase[0:8]
         filename8plus3=fileToExecuteTruncateTo8Letters(filenametap)
         skipping_list_error_txt=""
-        print("[DOWNLOAD_"+str(id_download)+"] Filename : "+filenametap+" tail : "+tail+"  file : "+tapefile)
+        print("[DOWNLOAD_"+str(id_download)+"] Filename : "+filenametap+" tail : "+tail+"  file : "+download_file)
         if isOric1(download_platform):
             CreateTargetFolder(dest_basic10,destetc_basic10,letter)
         
@@ -662,6 +664,7 @@ crl = pycurl.Curl()
 
 # Set URL value
 crl.setopt(crl.URL, 'http://api.oric.org/0.2/softwares/?sorts=name_software')
+#crl.setopt(crl.URL, 'http://api.oric.org/0.2/softwares/125')
 
 # Write bytes that are utf-8 encoded
 crl.setopt(crl.WRITEDATA, b_obj)
@@ -845,12 +848,12 @@ for i in range(len(datastore)):
             if isOric1(download_1_platform):
                 basic10_main_db_str=basic10_main_db_str+addSoftware
                 BuildTape(tmpfolderRetrieveSoftware,tail,dest_basic10,letter,filenametap8bytesLength,filenametapext,destroot,destetc_basic10,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
-                print("[TAPE][DOWNLOAD_1][ORIC1] Adding "+filenametap8bytesLength+"to basic10 command")
+                print("[TAPE][DOWNLOAD_1][ORIC1] Adding "+filenametap8bytesLength+" to basic10 command")
                 number_of_software_basic10=number_of_software_basic10+1
                 #buildDbFileSoftwareSingle(destetc_basic10,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             if isAtmos(download_1_platform):
                 basic_main_db_str=basic_main_db_str+addSoftware
-                print("[TAPE][DOWNLOAD_1][ATMOS] Adding "+filenametap8bytesLength+"to basic11 command")
+                print("[TAPE][DOWNLOAD_1][ATMOS] Adding "+filenametap8bytesLength+" to basic11 command")
                 number_of_software_basic11=number_of_software_basic11+1
 
             lenAddSoftware+=len(addSoftware)
