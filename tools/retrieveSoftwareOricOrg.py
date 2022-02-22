@@ -414,11 +414,14 @@ def CreateTargetFolder(dest,destetc,letter):
     #print(folder)
     directory = os.path.dirname(folder)
     if not os.path.exists(folder) and folder!="":
-        os.mkdir(folder)
         print("######################## Create "+folder)
-    if not os.path.exists(folderdb) and folderdb!="":
-        os.mkdir(folderdb)
+        os.mkdir(folder)
+        
+    if not os.path.exists(folderdb) and folderdb!="" and destetc!="":
+        # destroms,"",letter)
         print("######################## Create "+folderdb)
+        os.mkdir(folderdb)
+        
 
 def KeyboardMatrix(num):
     keyboardMatrixTab=[
