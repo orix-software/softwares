@@ -269,7 +269,7 @@ def  BuildRom(download_label,name_software,cnf,download_file,tmpfolderRetrieveSo
     cnf=cnf+"\n"
     cnf=cnf+"path=/usr/share/roms/"+letter+"/"+filenametap8bytesLength+".rom"+"\n"
     print("[ROM] Copying ROM : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".rom" )
-    copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+"rom")
+    copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+".rom")
     
     return cnf
 
