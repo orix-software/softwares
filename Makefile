@@ -22,4 +22,4 @@ all : build
 
 
 build:
-	cd tools && python3 retrieveSoftwareOricOrg.py && sortRom.sh
+	cd tools && python3 retrieveSoftwareOricOrg.py && ./sortRom.sh
