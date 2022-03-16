@@ -1067,7 +1067,8 @@ f.close()
 
 print("Write roms/nb : "+str(nb_of_roms))
 f = open(destetc_roms+"/bankstmp.cnf", "wb")
-f.write(bytearray(roms_banks_cnf,'ascii'))
+# Remove the last byte which contains \n 
+f.write(bytearray(roms_banks_cnf[:-1],'ascii')) 
 f.close()
 
 
