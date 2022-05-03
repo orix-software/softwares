@@ -115,8 +115,9 @@ jobs:
 
       - name: Compile project
         run:  |
+          sudo apt-get update
           sudo apt-get install curl -y
-          sudo apt-get install libcurl4-gnutls-dev -y
+          #sudo apt-get install libcurl4-gnutls-dev -y --fix-missing
           sudo apt-get install python3-pycurl -y
           make
 
