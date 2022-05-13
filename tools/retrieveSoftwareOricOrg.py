@@ -4,7 +4,7 @@ import json
 import pycurl
 import zipfile
 import os, sys
-from io import BytesIO 
+from io import BytesIO
 import pathlib
 import re
 from datetime import date
@@ -62,7 +62,7 @@ destetcsedoric="../build/var/cache/sedoric/"
 
 skipping_problem_tape_filename="tape_error.txt"
 
- 
+destloadermd="../orix/usr/share/loader/"
 
 filename_no_support_for_software="software_error.txt"
 
@@ -80,7 +80,7 @@ def computeVersion():
     today = date.today()
     month=int(today.strftime("%m"))
     quarter=str(((month*3)//10)+1)
-    
+
     strversion = today.strftime("%Y."+quarter+".%m.%d")
     return strversion
 
@@ -90,7 +90,7 @@ def buildDbFileSoftwareSingle(destetc,letter,name_software,filenametap8bytesLeng
     f.write(DecimalToBinary(version_bin))
     f.write(DecimalToBinary(rombasic11))
     f.write(KeyboardMatrix(fire2_joy))
-    f.write(KeyboardMatrix(fire3_joy))            
+    f.write(KeyboardMatrix(fire3_joy))
     f.write(KeyboardMatrix(down_joy))
     f.write(KeyboardMatrix(right_joy))
     f.write(KeyboardMatrix(left_joy))
@@ -150,7 +150,7 @@ def removeFrenchChars(mystr):
     return mystr
 
 def fileToExecuteTruncateTo8Letters(filename):
-  
+
     head, tail = os.path.split(filename)
     filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
     print("Filenametap : "+filenametap)
@@ -158,7 +158,7 @@ def fileToExecuteTruncateTo8Letters(filename):
     filenametapext=tcnf[1]
     filenametapbase=tcnf[0]
     filenametap8bytesLength=filenametapbase[0:8]+"."+filenametapext
-    
+
     return filenametap8bytesLength.upper()
 
 
@@ -179,27 +179,38 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
         if doslash=="yes":
             md_software=md_software+"/"
         md_software=md_software+"Oric-1"
-        doslash="no"                
-
+        doslash="no"
     md_software=md_software+"\n"
-            
+
     md_software=md_software+"Programmer : "+removeFrenchChars(programmer_software)+"\n"
     #md_software=md_software+"Origin : "+programmer_software+"\n"
     md_software=md_software+"Informations : "+removeFrenchChars(junk_software)+"\n"
-            
+
     #print(md_software)
-            
+
     md=filenametap8bytesLength+".md"
     file_md_path=dest+"/"+letter+"/"+md
     f = open(file_md_path, "wb")
     md_software = re.sub(u"\u2013", "-", md_software)
     md_software = re.sub(u"\u2019", "'", md_software)
-    
+
     #md_software = md_software.decode('utf-8')
     #md_software = md_software.replace("\u2013", "-") #en dash
     md_bin=bytearray(md_software,'ascii')
     f.write(md_bin)
     f.close()
+
+    # For loader
+    if not os.path.exists(destloadermd+"/"+letter):
+        os.mkdir(destloadermd+"/"+letter)
+
+    file_md_path=destloadermd+"/"+letter+"/"+md
+    f = open(file_md_path, "wb")
+    md_bin=bytearray(md_software,'ascii')
+    f.write(md_bin)
+    f.close()
+
+
 
 def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     CreateTargetFolder(destpath,destetc,letter)
@@ -516,7 +527,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
         print("[DOWNLOAD_"+str(id_download)+"] Filename : "+filenametap+" tail : "+tail+"  file : "+download_file)
         if isOric1(download_platform):
             CreateTargetFolder(dest_basic10,destetc_basic10,letter)
-        
+
         if isRom(download_platform):
             if filenametapext=="rom":
                 CreateTargetFolder(destroms,"",letter)
@@ -646,7 +657,7 @@ if not os.path.exists(destlauncher):
 if not os.path.exists(destftdos):
     pathlib.Path(destftdos).mkdir(parents=True)
 if not os.path.exists(destetcftdos):
-    pathlib.Path(destetcftdos).mkdir(parents=True)    
+    pathlib.Path(destetcftdos).mkdir(parents=True)
 
 #skipping_problem_tape_filename
 
@@ -654,16 +665,20 @@ if not os.path.exists(destetcftdos):
 if not os.path.exists(destsedoric):
     pathlib.Path(destsedoric).mkdir(parents=True)
 if not os.path.exists(destetcsedoric):
-    pathlib.Path(destetcsedoric).mkdir(parents=True)        
+    pathlib.Path(destetcsedoric).mkdir(parents=True)
 
 if not os.path.exists(tmpfolderRetrieveSoftware):
-    pathlib.Path(tmpfolderRetrieveSoftware).mkdir(parents=True)    
+    pathlib.Path(tmpfolderRetrieveSoftware).mkdir(parents=True)
+
+if not os.path.exists(destloadermd):
+    pathlib.Path(destloadermd).mkdir(parents=True)
+
 
 print(computeVersion())
 
 print("Retrieve json file from oric.org ...")
-b_obj = BytesIO() 
-crl = pycurl.Curl() 
+b_obj = BytesIO()
+crl = pycurl.Curl()
 
 # Set URL value
 crl.setopt(crl.URL, 'http://api.oric.org/0.2/softwares/?sorts=name_software')
@@ -703,7 +718,7 @@ lenAddSoftware=0
 
 
 for i in range(len(datastore)):
-    
+
     #Use the new datastore datastructure
     id_software=datastore[i]["id"]
     tapefile=datastore[i]["download_software"]
@@ -711,15 +726,15 @@ for i in range(len(datastore)):
     name_software=datastore[i]["name_software"]
     programmer_software=datastore[i]["programmer_software"]
     download_platform_software=datastore[i]["download_platform_software"]
-    
+
     download_1_platform=datastore[i]["platform_software"]
     download_2_platform=datastore[i]["second_download_platform_software"]
     download_3_platform=datastore[i]["download_3_platform"]
     download_4_platform=datastore[i]["download_4_platform"]
     download_5_platform=datastore[i]["download_5_platform"]
-    download_6_platform=datastore[i]["download_6_platform"]    
+    download_6_platform=datastore[i]["download_6_platform"]
     download_7_platform=datastore[i]["download_7_platform"]
-    
+
     download_1_file=datastore[i]["download_software"]
     download_2_file=datastore[i]["second_download_software"]
     download_3_file=datastore[i]["download_3_path"]
@@ -727,14 +742,14 @@ for i in range(len(datastore)):
     download_5_file=datastore[i]["download_5_path"]
     download_6_file=datastore[i]["download_6_path"]
     download_7_file=datastore[i]["download_7_path"]
-    
+
     download_1_label=datastore[i]["download_1_label"]
     download_2_label=datastore[i]["download_2_label"]
     download_3_label=datastore[i]["download_3_label"]
     download_4_label=datastore[i]["download_4_label"]
     download_5_label=datastore[i]["download_5_label"]
     download_6_label=datastore[i]["download_6_label"]
-    download_7_label=datastore[i]["download_7_label"]    
+    download_7_label=datastore[i]["download_7_label"]
 
     category_software=datastore[i]["category_software"]
     junk_software=datastore[i]["junk_software"]
@@ -748,7 +763,7 @@ for i in range(len(datastore)):
     joystick_management_state=datastore[i]["joystick_management_state"]
     junk_software=removeFrenchChars(junk_software)
 
-    
+
 
     programmer_software=programmer_software.replace("é", "e")
     programmer_software=programmer_software.replace("è", "e")
@@ -775,11 +790,7 @@ for i in range(len(datastore)):
         letter=tail[0:1].lower()
 
         CreateTargetFolder(dest,destetc,letter)
-       
 
-
-            
-        
         print("###########################################################################################")
         print("Generating : "+name_software+"/"+id_software)
         filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
@@ -789,7 +800,7 @@ for i in range(len(datastore)):
         filenametapbase=tcnf[0]
         filenametap8bytesLength=filenametapbase[0:8]
         filename8plus3=fileToExecuteTruncateTo8Letters(filenametap)
-        
+
         print("Filenametap : "+filenametap+" tail : "+tail+" tape file : "+tapefile)
 
         if isOric1(download_1_platform):
