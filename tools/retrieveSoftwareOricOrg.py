@@ -62,7 +62,7 @@ destetcsedoric="../build/var/cache/sedoric/"
 
 skipping_problem_tape_filename="tape_error.txt"
 
-destloadermd="../orix/usr/share/loader/"
+destloadermd="../build/usr/share/loader/"
 
 filename_no_support_for_software="software_error.txt"
 
