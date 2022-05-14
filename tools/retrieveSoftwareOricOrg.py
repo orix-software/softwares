@@ -107,7 +107,6 @@ def buildDbFileSoftwareSingle(destetc,letter,name_software,filenametap8bytesLeng
 
 def removeFrenchChars(mystr):
 
-  
     mystr=mystr.replace(u'\xaa', "u")
     mystr=mystr.replace(u'\xa7', "c")
     mystr=mystr.replace(u'\xa0', u'a')
@@ -120,9 +119,9 @@ def removeFrenchChars(mystr):
 
     mystr=mystr.replace(u'\xeb', u'e') # e tréma lower case
     mystr=mystr.replace(u'\xe8', u'e') # è
-    
+
     mystr=mystr.replace("Ã¨", "e") # è pour mystère de Kikekankoi
-    
+
 
     mystr=mystr.replace("Ã©", "e")
     mystr=mystr.replace("é", "e")
@@ -143,10 +142,7 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace("©", "")
     mystr=mystr.replace("Ã", "e")
 
-    
-    
-    
-    
+
     return mystr
 
 def fileToExecuteTruncateTo8Letters(filename):
@@ -210,8 +206,6 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
     f.write(md_bin)
     f.close()
 
-
-
 def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     CreateTargetFolder(destpath,destetc,letter)
     print("[DSK]Copying dsk : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
@@ -239,14 +233,14 @@ def BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength
 #$trom["255"]="NOK : Game ROM altered charset";
 
 
-    # Rom hobbit 
+    # Rom hobbit
     if rombasic11=="4":
         print("Copy : "+tmpfolderRetrieveSoftware+tail+" to : "+destroot+"/"+filenametap8bytesLength+"."+filenametapext )
         copyfile(tmpfolderRetrieveSoftware+tail,destroot+"/"+filenametap8bytesLength+"."+filenametapext )
         # Force to ROM 0 : hobbit ROM
         rombasic11=0
-    # In oric.org we have roms id to declare if a game is working or not, and if it's 
-    if rombasic11!="0" and rombasic11!="1" and rombasic11!="2":    
+    # In oric.org we have roms id to declare if a game is working or not, and if it's
+    if rombasic11!="0" and rombasic11!="1" and rombasic11!="2":
         rombasic11=1
 
     if not os.path.exists(destetc+"/"+letter):
@@ -262,11 +256,10 @@ def CheckTape(filename,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8by
 
     if extension=="tap":
         print("Found tape file : "+removeFrenchChars(name_software))
-        
 
         BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
         # main db
-        
+
         return 0
     return 1
 
@@ -275,18 +268,18 @@ def  BuildRom(download_label,name_software,cnf,download_file,tmpfolderRetrieveSo
     # remove rom in the name
     name_software=name_software.replace(" ROMS","")
     name_software=name_software.replace(" ROM","")
-    
+
     cnf=cnf+"["+name_software+" ("+download_label+")"+"]"
     cnf=cnf+"\n"
     cnf=cnf+"path=/usr/share/roms/"+letter+"/"+filenametap8bytesLength+".rom"+"\n"
     print("[ROM] Copying ROM : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".rom" )
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+".rom")
-    
+
     return cnf
 
 def RuleLoader(flags_software):
            # rules for software in the launcher ?
-            # Does the first download is an atmos mode ? 
+            # Does the first download is an atmos mode ?
             # Yes we place it
 
             # Definition of FLAGS
@@ -306,7 +299,7 @@ def RuleLoader(flags_software):
 
 def isOric1(flags_software):
            # rules for software in the launcher ?
-            # Does the first download is an atmos mode ? 
+            # Does the first download is an atmos mode ?
             # Yes we place it
 
             # Definition of FLAGS
@@ -316,14 +309,14 @@ def isOric1(flags_software):
     flag=""
     if (flags_software.find('O') != -1 and flags_software.find('K') != -1):
         flag='O'
-        
+
         return flag
     return flag
 
 
 def isAtmos(flags_software):
            # rules for software in the launcher ?
-            # Does the first download is an atmos mode ? 
+            # Does the first download is an atmos mode ?
             # Yes we place it
 
             # Definition of FLAGS
@@ -440,7 +433,7 @@ def KeyboardMatrix(num):
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,0   ,172 ,188 , #0..9
            #          RET 
             180 ,156 ,175 ,0   ,0   ,0   ,0   ,0   ,0   ,0   , #10..19
-           #                                   ESC 
+           #                                   ESC
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,169 ,0   ,0   , #20..29
            #          ESP
             0   ,0   ,132 ,0   ,0   ,0   ,0   ,0   ,0   ,0   , #30..39
@@ -450,9 +443,9 @@ def KeyboardMatrix(num):
             140 ,0   ,148   ,0   ,0   ,174 ,146 ,186 ,185 ,158  , #60..69
            #F    G    H    I    J    K    L    M    N    O
             153 ,150 ,142 ,141 ,129 ,131 ,143 ,130 ,136 ,149  , #70..79
-           #P    Q    R    S     T    U    V    W    X    Y 
+           #P    Q    R    S     T    U    V    W    X    Y
             157 ,177 ,145 ,182 ,137 ,133 ,152 ,180 ,176 ,134 , #80..89
-           #Z 
+           #Z
             170 ,0   ,0   ,0   ,0   ,0   ,0   ,0   ,0   ,0    , #90..99
 
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,0  ,0  , 0  , #100..109
@@ -467,7 +460,7 @@ def KeyboardMatrix(num):
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,0  ,0  , 0  , #190..199
 
 
-            ] 
+            ]
     key=keyboardMatrixTab[int(num)]
     return DecimalToBinary(key)
 
@@ -553,7 +546,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
         matchRule=0
         flag=""
         if CheckTape(download_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
-            
+
             print("[TAPE][DOWNLOAD_"+str(id_download)+"] Check tape download")
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
             if isOric1(download_platform):
@@ -596,10 +589,10 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
                 if category_software=="5" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 if category_software=="6" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category dem in loader db")
-                    demos_db_str=demos_db_str+addSoftwareLauncher          
+                    demos_db_str=demos_db_str+addSoftwareLauncher
                     nb_of_demo=nb_of_demo+1
                 if category_software=="7" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category unsorted in loader db")
@@ -614,7 +607,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
                 if category_software=="9" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category utils in loader db")
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 if category_software=="10" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category music in loader db")
                     music_db_str=music_db_str+addSoftwareLauncher
@@ -623,7 +616,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
             #    print("[TAPE][DOWNLOAD_1] Skipping first download trying second download : "+removeFrenchChars(name_software))
             #    skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_platform+" "+id_software+"\n"
 
-        
+
 
 
 
@@ -632,19 +625,19 @@ exist_ok=True
 if not os.path.exists(dest):
     pathlib.Path(dest).mkdir(parents=True)
 if not os.path.exists(destetc):
-    pathlib.Path(destetc).mkdir(parents=True)    
+    pathlib.Path(destetc).mkdir(parents=True)
 
 # Basic10 path
 if not os.path.exists(dest_basic10):
     pathlib.Path(dest_basic10).mkdir(parents=True)
 if not os.path.exists(destetc_basic10):
-    pathlib.Path(destetc_basic10).mkdir(parents=True)    
+    pathlib.Path(destetc_basic10).mkdir(parents=True)
 
 # Roms path
 if not os.path.exists(destroms):
     pathlib.Path(destroms).mkdir(parents=True)
 if not os.path.exists(destetc_roms):
-    pathlib.Path(destetc_roms).mkdir(parents=True)    
+    pathlib.Path(destetc_roms).mkdir(parents=True)
 
 
 # Launcher
@@ -687,17 +680,17 @@ crl.setopt(crl.URL, 'http://api.oric.org/0.2/softwares/?sorts=name_software')
 # Write bytes that are utf-8 encoded
 crl.setopt(crl.WRITEDATA, b_obj)
 
-# Perform a file transfer 
-crl.perform() 
+# Perform a file transfer
+crl.perform()
 
 # End curl session
 crl.close()
 
-# Get the content stored in the BytesIO object (in byte characters) 
+# Get the content stored in the BytesIO object (in byte characters)
 get_body = b_obj.getvalue()
 
-# Decode the bytes stored in get_body to HTML and print the result 
-#print('Output of GET request:\n%s' % get_body.decode('utf8')) 
+# Decode the bytes stored in get_body to HTML and print the result
+#print('Output of GET request:\n%s' % get_body.decode('utf8'))
 
 datastore = json.loads(get_body.decode('utf8'))
 
@@ -830,14 +823,14 @@ for i in range(len(datastore)):
         flag=""
         # Download 1
 
-        # Manage priority : 
+        # Manage priority :
         # Atmos + tape if available is inserted (high priority)
         # Oric-1 + tape lower priority than atmos
         download_1_high_priority=0
         download_2_high_priority=0
         download_3_high_priority=0
         download_4_high_priority=0
-        
+
         if (download_1_platform.find('A') != -1 and download_1_platform.find('K') != -1):
             download_1_high_priority=1
         else:
@@ -856,7 +849,7 @@ for i in range(len(datastore)):
 
 
         if CheckTape(download_1_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
-            
+
             print("[TAPE][DOWNLOAD_1] Check tape download 1")
             addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
             if isOric1(download_1_platform):
@@ -936,10 +929,9 @@ for i in range(len(datastore)):
                     nb_of_roms=nb_of_roms+1
                 else:
                     print("[ROM][DOWNLOAD2] is not a .rom extension")
-            
-            
+
             if flag=="" and CheckTape(download_2_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
-                
+
 
                 addSoftware=filenametap8bytesLength.upper()+';'+removeFrenchChars(name_software)+'\0'
                 if isOric1(download_2_platform):
