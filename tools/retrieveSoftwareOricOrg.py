@@ -8,8 +8,7 @@ from io import BytesIO
 import pathlib
 import re
 from datetime import date
-
-
+from os import path
 
 
 from shutil import copyfile
@@ -112,6 +111,8 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace(u'\xa0', u'a')
     mystr=mystr.replace(u'\xa2', u'a')
     mystr=mystr.replace(u'\xa8', u'e') # e tréma
+    mystr=mystr.replace(u'\xa3', u'') # point
+    mystr=mystr.replace(u'\xaf', u'e') # point
 
     mystr=mystr.replace(u'\xbb', u'c') # ç
     mystr=mystr.replace(u'\xb9', u'u') # ù
@@ -141,6 +142,7 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace("î", "i")
     mystr=mystr.replace("©", "")
     mystr=mystr.replace("Ã", "e")
+    mystr=mystr.replace("Â£", "£")
 
 
     return mystr
@@ -158,12 +160,14 @@ def fileToExecuteTruncateTo8Letters(filename):
     return filenametap8bytesLength.upper()
 
 
-def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,download_platform_software,programmer_software,junk_software):
-    md_software="# "+removeFrenchChars(name_software)+"\n"
+def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,download_platform_software,programmer_software,junk_software,id_software):
+    md_software="#"+removeFrenchChars(name_software)+"\n\n"
     #md_software=md_software+"Type : "+download_platform_software+"\n"
     tdate_software=date_software.split('-')
     year=tdate_software[0]
-    md_software=md_software+"Release Date : "+year+"\n"
+    if year=="0000":
+        year="Unknown"
+    md_software=md_software+"Release Date : "+year+"\n\n"
     md_software=md_software+"Platform : "
     match = re.search('A', download_platform_software)
     doslash="no"
@@ -174,15 +178,80 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
     if match:
         if doslash=="yes":
             md_software=md_software+"/"
-        md_software=md_software+"Oric-1"
-        doslash="no"
-    md_software=md_software+"\n"
+            md_software=md_software+"Oric-1"
+    match = re.search('T', download_platform_software)
+    if match:
+        if doslash=="yes":
+            md_software=md_software+"/"
+            md_software=md_software+"Telestrat"
+    match = re.search('L', download_platform_software)
+    if match:
+        if doslash=="yes":
+            md_software=md_software+"/"
+            md_software=md_software+"Twilighte board joysticks"
+    match = re.search('J', download_platform_software)
+    if match:
+        if doslash=="yes":
+            md_software=md_software+"/"
+            md_software=md_software+"FTDOS"
+    match = re.search('S', download_platform_software)
+    if match:
+        if doslash=="yes":
+            md_software=md_software+"/"
+            md_software=md_software+"Sedoric"
 
-    md_software=md_software+"Programmer : "+removeFrenchChars(programmer_software)+"\n"
-    #md_software=md_software+"Origin : "+programmer_software+"\n"
-    md_software=md_software+"Informations : "+removeFrenchChars(junk_software)+"\n"
+
+    match = re.search('Z', download_platform_software)
+    if match:
+        if doslash=="yes":
+            md_software=md_software+"/"
+        md_software=md_software+"Orix"
+
+
+    md_software=md_software+"\n\n"
+    if programmer_software=="":
+        md_software=md_software+"Programmer : Unknown\n\n"
+    else:
+        md_software=md_software+"Programmer : "+removeFrenchChars(programmer_software)+"\n\n"
+
+    md_software=md_software+"Informations : "+removeFrenchChars(junk_software)+"\n\n"
 
     #print(md_software)
+
+
+    print("Retrieve comments for software ..."+id_software)
+    b_obj = BytesIO()
+    crl = pycurl.Curl()
+
+    # Set URL value
+    crl.setopt(crl.URL, 'http://api.oric.org/0.2/comments/'+id_software)
+    #crl.setopt(crl.URL, 'http://api.oric.org/0.2/softwares/125')
+
+    # Write bytes that are utf-8 encoded
+    crl.setopt(crl.WRITEDATA, b_obj)
+
+    # Perform a file transfer
+    crl.perform()
+
+    # End curl session
+    crl.close()
+
+    # Get the content stored in the BytesIO object (in byte characters)
+    get_body = b_obj.getvalue()
+
+    # Decode the bytes stored in get_body to HTML and print the result
+    #print('Output of GET request:\n%s' % get_body.decode('utf8'))
+
+    list_comment = json.loads(get_body.decode('utf8'))
+
+    print(list_comment)
+    if list_comment:
+        md_software=md_software+"=== Comments ===\n\n"
+        for i in range(len(list_comment)):
+            comment=list_comment[i]["comment"]
+            md_software=md_software+removeFrenchChars(comment)+"\n"
+            md_software=md_software+"------\n\n"
+
 
     md=filenametap8bytesLength+".md"
     file_md_path=dest+"/"+letter+"/"+md
@@ -191,7 +260,8 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
     md_software = re.sub(u"\u2019", "'", md_software)
 
     #md_software = md_software.decode('utf-8')
-    #md_software = md_software.replace("\u2013", "-") #en dash
+    #md_software = md_software.replace("\u2013", "-") #en das
+    md_software=md_software.replace(r"\r\n", r"\n")
     md_bin=bytearray(md_software,'ascii')
     f.write(md_bin)
     f.close()
@@ -201,6 +271,7 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
         os.mkdir(destloadermd+"/"+letter)
 
     file_md_path=destloadermd+"/"+letter+"/"+md
+    print("Writing md "+file_md_path)
     f = open(file_md_path, "wb")
     md_bin=bytearray(md_software,'ascii')
     f.write(md_bin)
@@ -212,7 +283,7 @@ def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
     if not os.path.exists(destetc+"/"+letter):
         os.mkdir(destetc+"/"+letter)
-    buildMdFile(filenametap8bytesLength,destpath,letter,name_software,date_software,platform_software,programmer_software,junk_software)
+    buildMdFile(filenametap8bytesLength,destpath,letter,name_software,date_software,platform_software,programmer_software,junk_software,id_software)
     buildDbFileSoftwareSingle(destetc,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
 
 def BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
@@ -246,7 +317,7 @@ def BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength
     if not os.path.exists(destetc+"/"+letter):
         os.mkdir(destetc+"/"+letter)
     print("Writing in db file rom id : ",str(rombasic11))
-    buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,download_platform_software,programmer_software,junk_software)
+    buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,download_platform_software,programmer_software,junk_software,id_software)
     buildDbFileSoftwareSingle(destetc,letter,name_software,filenametap8bytesLength,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
 
 def CheckTape(filename,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
@@ -326,31 +397,29 @@ def isAtmos(flags_software):
     flag=""
     if (flags_software.find('A') != -1 and flags_software.find('K') != -1):
         flag='A'
-        
         return flag
     return flag
 
 def isRom(flags_software):
            # rules for software in the launcher ?
-            # Does the first download is an atmos mode ? 
+            # Does the first download is an atmos mode ?
             # Yes we place it
 
             # Definition of FLAGS
             # A : Atmos and tape file
             # O : Oric-1 and tape file
-    
+
     flag=""
     if (flags_software.find('R') != -1):
         flag='R'
         print("Is ROM : "+ flags_software)
-        
         return flag
     return flag
 
 
 def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
-        b_obj_tape = BytesIO() 
-        crl_tape = pycurl.Curl() 
+        b_obj_tape = BytesIO()
+        crl_tape = pycurl.Curl()
 
         # Set URL value
         crl_tape.setopt(crl_tape.URL, 'https://cdn.oric.org/games/software/'+pathFileToDownload)
@@ -359,17 +428,17 @@ def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
         # Write bytes that are utf-8 encoded
         crl_tape.setopt(crl_tape.WRITEDATA, b_obj_tape)
 
-        # Perform a file transfer 
-        crl_tape.perform() 
+        # Perform a file transfer
+        crl_tape.perform()
 
         # End curl session
         crl_tape.close()
 
-        # Get the content stored in the BytesIO object (in byte characters) 
+        # Get the content stored in the BytesIO object (in byte characters)
         get_body_tape = b_obj_tape.getvalue()
 
-        # Decode the bytes stored in get_body to HTML and print the result 
-        #print('Output of GET request:\n%s' % get_body.decode('utf8')) 
+        # Decode the bytes stored in get_body to HTML and print the result
+        #print('Output of GET request:\n%s' % get_body.decode('utf8'))
 
 
 
@@ -383,7 +452,6 @@ def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
 def CheckZip(filename):
     extension=download_1_file[-3:].lower()
     if extension=="zip":
-        
         return 0
     return 1
 
@@ -420,18 +488,17 @@ def CreateTargetFolder(dest,destetc,letter):
     if not os.path.exists(folder) and folder!="":
         print("######################## Create "+folder)
         os.mkdir(folder)
-        
+
     if not os.path.exists(folderdb) and folderdb!="" and destetc!="":
         # destroms,"",letter)
         print("######################## Create "+folderdb)
         os.mkdir(folderdb)
-        
 
 def KeyboardMatrix(num):
     keyboardMatrixTab=[
            #                                        LeftRight
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,0   ,172 ,188 , #0..9
-           #          RET 
+           #          RET
             180 ,156 ,175 ,0   ,0   ,0   ,0   ,0   ,0   ,0   , #10..19
            #                                   ESC
             0   ,0   ,0   ,0   ,0   ,0   ,0   ,169 ,0   ,0   , #20..29
@@ -574,12 +641,12 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
                 if category_software=="2" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 #Tape ins game
                 if category_software=="3" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category game in loader db")
                     game_db_str=game_db_str+addSoftwareLauncher
-                    nb_of_games=nb_of_games+1                
+                    nb_of_games=nb_of_games+1
                 # Tape ins utility
                 if category_software=="4" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_"+str(id_download)+"][LOADER] Add in category util in loader db")
@@ -642,11 +709,9 @@ if not os.path.exists(destetc_roms):
 
 # Launcher
 if not os.path.exists(destlauncher):
-    pathlib.Path(destlauncher).mkdir(parents=True)        
+    pathlib.Path(destlauncher).mkdir(parents=True)
 
-
-
-# ftdos    
+# ftdos
 if not os.path.exists(destftdos):
     pathlib.Path(destftdos).mkdir(parents=True)
 if not os.path.exists(destetcftdos):
@@ -712,8 +777,22 @@ lenAddSoftware=0
 
 for i in range(len(datastore)):
 
+
     #Use the new datastore datastructure
     id_software=datastore[i]["id"]
+
+    if not path.isfile("current_step.lock"):
+        print("Save step")
+        f = open("current_step.lock", "wb")
+        step=bytearray(id_software,'ascii')
+        f.write(step)
+        f.close()
+    else:
+        # Open step
+        f = open("current_step.lock", "r")
+        current_software=f.read()
+        f.close()
+
     tapefile=datastore[i]["download_software"]
 
     name_software=datastore[i]["name_software"]
@@ -755,8 +834,6 @@ for i in range(len(datastore)):
     name_software=name_software.replace("â", "o")
     joystick_management_state=datastore[i]["joystick_management_state"]
     junk_software=removeFrenchChars(junk_software)
-
-
 
     programmer_software=programmer_software.replace("é", "e")
     programmer_software=programmer_software.replace("è", "e")
@@ -806,8 +883,6 @@ for i in range(len(datastore)):
                 nb_of_roms=nb_of_roms+1
             else:
                 print("[ROM] is not a .rom extension")
-        
-
 
         if CheckZip(download_1_file)==0:
             flag=""
@@ -844,10 +919,6 @@ for i in range(len(datastore)):
                     if (download_2_platform.find('O') != -1 and download_2_platform.find('K') != -1):
                         download_2_high_priority=1
 
-
-
-
-
         if CheckTape(download_1_file,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:
 
             print("[TAPE][DOWNLOAD_1] Check tape download 1")
@@ -875,11 +946,11 @@ for i in range(len(datastore)):
                     nb_of_games=nb_of_games+1
                 if category_software=="2" and addSoftwareLauncher!="":
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 #Tape ins game
                 if category_software=="3" and addSoftwareLauncher!="":
                     game_db_str=game_db_str+addSoftwareLauncher
-                    nb_of_games=nb_of_games+1                
+                    nb_of_games=nb_of_games+1
                 # Tape ins utility
                 if category_software=="4" and addSoftwareLauncher!="":
                     utils_db_str=utils_db_str+addSoftwareLauncher
@@ -887,9 +958,9 @@ for i in range(len(datastore)):
                 # Tape ins unknow category set to utils
                 if category_software=="5" and addSoftwareLauncher!="":
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 if category_software=="6" and addSoftwareLauncher!="":
-                    demos_db_str=demos_db_str+addSoftwareLauncher          
+                    demos_db_str=demos_db_str+addSoftwareLauncher
                     nb_of_demo=nb_of_demo+1
                 if category_software=="7" and addSoftwareLauncher!="":
                     unsorted_db_str=unsorted_db_str+addSoftwareLauncher
@@ -901,7 +972,7 @@ for i in range(len(datastore)):
                 # Tape ins book utility
                 if category_software=="9" and addSoftwareLauncher!="":
                     utils_db_str=utils_db_str+addSoftwareLauncher
-                    nb_of_tools=nb_of_tools+1                
+                    nb_of_tools=nb_of_tools+1
                 if category_software=="10" and addSoftwareLauncher!="":
                     print("[TAPE][DOWNLOAD_1] Add in category music in loader db")
                     music_db_str=music_db_str+addSoftwareLauncher
@@ -916,7 +987,7 @@ for i in range(len(datastore)):
             head, tail = os.path.split(download_2_file)
             letter=tail[0:1].lower()
             filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
-            tcnf=filenametap.split('.')           
+            tcnf=filenametap.split('.')
             filenametapext=tcnf[1]
             filenametapbase=tcnf[0]
             filenametap8bytesLength=filenametapbase[0:8]
@@ -957,11 +1028,11 @@ for i in range(len(datastore)):
                         nb_of_games=nb_of_games+1
                     if category_software=="2" and addSoftwareLauncher!="":
                         utils_db_str=utils_db_str+addSoftwareLauncher
-                        nb_of_tools=nb_of_tools+1                
+                        nb_of_tools=nb_of_tools+1
                     #Tape ins game
                     if category_software=="3" and addSoftwareLauncher!="":
                         game_db_str=game_db_str+addSoftwareLauncher
-                        nb_of_games=nb_of_games+1                
+                        nb_of_games=nb_of_games+1
                     # Tape ins utility
                     if category_software=="4" and addSoftwareLauncher!="":
                         utils_db_str=utils_db_str+addSoftwareLauncher
@@ -969,9 +1040,9 @@ for i in range(len(datastore)):
                     # Tape ins unknow category set to utils
                     if category_software=="5" and addSoftwareLauncher!="":
                         utils_db_str=utils_db_str+addSoftwareLauncher
-                        nb_of_tools=nb_of_tools+1                
+                        nb_of_tools=nb_of_tools+1
                     if category_software=="6" and addSoftwareLauncher!="":
-                        demos_db_str=demos_db_str+addSoftwareLauncher          
+                        demos_db_str=demos_db_str+addSoftwareLauncher
                         nb_of_demo=nb_of_demo+1
                     if category_software=="7" and addSoftwareLauncher!="":
                         unsorted_db_str=unsorted_db_str+addSoftwareLauncher
@@ -983,7 +1054,7 @@ for i in range(len(datastore)):
                     # Tape ins book utility
                     if category_software=="9" and addSoftwareLauncher!="":
                         utils_db_str=utils_db_str+addSoftwareLauncher
-                        nb_of_tools=nb_of_tools+1                
+                        nb_of_tools=nb_of_tools+1
                     if category_software=="10" and addSoftwareLauncher!="":
                         print("########### Add music")
                         music_db_str=music_db_str+addSoftwareLauncher
