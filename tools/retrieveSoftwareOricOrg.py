@@ -1027,6 +1027,7 @@ for i in range(len(datastore)):
                         RetriveSoftwareInTmpFolder(download_2_file,tmpfolderRetrieveSoftware)
                 else:
                     print("Orix version found")
+                    flag='Z'
 
                 if isRom(download_2_platform):
                     if filenametapext=="rom":
