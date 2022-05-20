@@ -592,6 +592,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
 
     if download_file!="":
         print("Download file : "+download_file)
+        print("Retrieve download file "+download_file+" to : "+tmpfolderRetrieveSoftware)
         RetriveSoftwareInTmpFolder(download_file,tmpfolderRetrieveSoftware)
         extension=download_file[-3:].lower()
         head, tail = os.path.split(download_file)
