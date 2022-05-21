@@ -1023,9 +1023,9 @@ for i in range(len(datastore)):
                     filenametapext=tcnf[1]
                     filenametapbase=tcnf[0]
                     filenametap8bytesLength=filenametapbase[0:8]
+                    RetriveSoftwareInTmpFolder(download_2_file,tmpfolderRetrieveSoftware)
                     if not CheckZip(download_1_file)==0:
                         print("Download file 2 : "+download_2_file+" "+tmpfolderRetrieveSoftware)
-                        RetriveSoftwareInTmpFolder(download_2_file,tmpfolderRetrieveSoftware)
                 else:
                     print("Orix version found")
                     flag='Z'
