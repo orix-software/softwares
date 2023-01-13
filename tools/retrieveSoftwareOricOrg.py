@@ -710,10 +710,6 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
             #    skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_platform+" "+id_software+"\n"
 
 
-
-
-
-
 exist_ok=True
 if not os.path.exists(dest):
     pathlib.Path(dest).mkdir(parents=True)
