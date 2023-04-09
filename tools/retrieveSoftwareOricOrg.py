@@ -128,6 +128,8 @@ def removeFrenchChars(mystr):
     mystr=mystr.replace(u'\xb9', u'u') # ù
     mystr=mystr.replace(u'\xb4', u'o') # ù
 
+    mystr=mystr.replace(u'\xae', "i")
+
     mystr=mystr.replace(u'\xeb', u'e') # e tréma lower case
     mystr=mystr.replace(u'\xe8', u'e') # è
 
@@ -271,6 +273,7 @@ def buildMdFile(filenametap8bytesLength,dest,letter,name_software,date_software,
     md_software = re.sub(u"\u2013", "-", md_software)
     md_software = re.sub(u"\u2019", "'", md_software)
     md_software = re.sub(u"\u2026", "...", md_software)
+    
 
     #md_software = md_software.decode('utf-8')
     #md_software = md_software.replace("\u2013", "-") #en das
