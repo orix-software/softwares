@@ -481,8 +481,10 @@ def CheckZip(filename):
 def CheckDsk(download_platform_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     extension=download_platform_software[-3:].lower()
     if extension=="dsk":
+
         match = re.search('J', download_platform_software)
-        print("[DSK] download_platform_software : "+download_platform_software)
+
+        print("[DSK] download_platform_software : "+download_platform_software+" flags : "+download_platform_software)
         if match:
             # Jasmin
             print ('[DSK] jasmin/ftdos dsk file')
@@ -835,6 +837,10 @@ for i in range(len(datastore)):
         download_5_platform=datastore[i]["download_5_platform"]
         download_6_platform=datastore[i]["download_6_platform"]
         download_7_platform=datastore[i]["download_7_platform"]
+        download_8_platform=datastore[i]["download_8_platform"]
+        download_9_platform=datastore[i]["download_9_platform"]
+        download_10_platform=datastore[i]["download_10_platform"]
+        download_11_platform=datastore[i]["download_11_platform"]
 
         download_1_file=datastore[i]["download_software"]
         download_2_file=datastore[i]["second_download_software"]
@@ -843,6 +849,10 @@ for i in range(len(datastore)):
         download_5_file=datastore[i]["download_5_path"]
         download_6_file=datastore[i]["download_6_path"]
         download_7_file=datastore[i]["download_7_path"]
+        download_8_file=datastore[i]["download_8_path"]
+        download_9_file=datastore[i]["download_9_path"]
+        download_10_file=datastore[i]["download_10_path"]
+        download_11_file=datastore[i]["download_11_path"]
 
         download_1_label=datastore[i]["download_1_label"]
         download_2_label=datastore[i]["download_2_label"]
@@ -851,6 +861,10 @@ for i in range(len(datastore)):
         download_5_label=datastore[i]["download_5_label"]
         download_6_label=datastore[i]["download_6_label"]
         download_7_label=datastore[i]["download_7_label"]
+        download_8_label=datastore[i]["download_8_label"]
+        download_9_label=datastore[i]["download_9_label"]
+        download_10_label=datastore[i]["download_10_label"]
+        download_11_label=datastore[i]["download_11_label"]
 
         category_software=datastore[i]["category_software"]
         junk_software=datastore[i]["junk_software"]
@@ -1030,6 +1044,9 @@ for i in range(len(datastore)):
                     print("Orix version found")
                     flag='Z'
 
+                if CheckDsk(download_2_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
+                    print("[DSK][download_2_file] Id_software:"+id_software)
+
                 if isRom(download_2_platform):
                     if filenametapext=="rom":
                         CreateTargetFolder(destroms,"",letter)
@@ -1108,6 +1125,8 @@ for i in range(len(datastore)):
             manage_download(download_5_file,download_5_platform,download_5_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,5)
             manage_download(download_6_file,download_6_platform,download_6_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,6)
             manage_download(download_7_file,download_7_platform,download_7_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,7)
+            manage_download(download_8_file,download_8_platform,download_8_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,8)
+
 EOF=0xFF
 print("Write basic11 db"+str(number_of_software_basic11))
 f = open(destetc+"/"+basic_main_db, "wb")
