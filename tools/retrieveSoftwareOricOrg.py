@@ -9,6 +9,7 @@ import pathlib
 import re
 from datetime import date
 from os import path
+import urllib.parse
 
 
 from shutil import copyfile
@@ -298,6 +299,7 @@ def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap
     CreateTargetFolder(destpath,destetc,letter)
     print("[DSK]Copying dsk : "+tmpfolderRetrieveSoftware+tail+" into :"+destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+"/"+letter+"/"+filenametap8bytesLength+".dsk" )
+    os.remove(tmpfolderRetrieveSoftware+tail)
     if not os.path.exists(destetc+"/"+letter):
         os.mkdir(destetc+"/"+letter)
     buildMdFile(filenametap8bytesLength,destpath,letter,name_software,date_software,platform_software,programmer_software,junk_software,id_software)
@@ -306,9 +308,11 @@ def BuildDsk(platform_software,letter,destpath,destetc,name_software,filenametap
 def BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
     #Hobbit ROM we copy also the tape file at the root of the sdcard
     print("Copying tape : "+tmpfolderRetrieveSoftware+tail+" to : "+dest+"/"+letter+"/"+filenametap8bytesLength+"."+filenametapext)
+
     print("Rom basic id : "+str(rombasic11))
     CreateTargetFolder(dest,destetc,letter)
     copyfile(tmpfolderRetrieveSoftware+tail,dest+"/"+letter+"/"+filenametap8bytesLength+"."+filenametapext)
+    #os.remove(tmpfolderRetrieveSoftware+tail)
 
 #$trom["0"]="undefined";
 #$trom["4"]="Rom Hobbit";
@@ -342,8 +346,8 @@ def CheckTape(filename,tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8by
         return 1
 
 
-    if extension=="tap":
-        print("Found tape file : "+removeFrenchChars(name_software))
+    if filenametapext=="tap":
+        print("Found tape file : "+removeFrenchChars(name_software)+"Extension : "+filenametapext)
 
         BuildTape(tmpfolderRetrieveSoftware,tail,dest,letter,filenametap8bytesLength,filenametapext,destroot,destetc,name_software,date_software,download_platform_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
         # main db
@@ -427,13 +431,13 @@ def isOrix(flags_software):
     return flag
 
 def isRom(flags_software):
-           # rules for software in the launcher ?
-            # Does the first download is an atmos mode ?
-            # Yes we place it
+    # rules for software in the launcher ?
+    # Does the first download is an atmos mode ?
+    # Yes we place it
 
-            # Definition of FLAGS
-            # A : Atmos and tape file
-            # O : Oric-1 and tape file
+    # Definition of FLAGS
+    # A : Atmos and tape file
+    # O : Oric-1 and tape file
 
     flag=""
     if (flags_software.find('R') != -1):
@@ -442,13 +446,13 @@ def isRom(flags_software):
         return flag
     return flag
 
-
 def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
         b_obj_tape = BytesIO()
         crl_tape = pycurl.Curl()
 
         # Set URL value
-        crl_tape.setopt(crl_tape.URL, 'https://cdn.oric.org/games/software/'+pathFileToDownload)
+        crl_tape.setopt(crl_tape.URL, 'https://cdn.oric.org/games/software/'+urllib.parse.quote(pathFileToDownload))
+        print("Get file : "+'https://cdn.oric.org/games/software/'+urllib.parse.quote(pathFileToDownload))
         crl_tape.setopt(crl_tape.SSL_VERIFYHOST, 0)
         crl_tape.setopt(crl_tape.SSL_VERIFYPEER, 0)
         # Write bytes that are utf-8 encoded
@@ -465,12 +469,8 @@ def RetriveSoftwareInTmpFolder(pathFileToDownload,tmpfolderRetrieveSoftware):
 
         # Decode the bytes stored in get_body to HTML and print the result
         #print('Output of GET request:\n%s' % get_body.decode('utf8'))
-
-
-
-
         head, tail = os.path.split(pathFileToDownload)
-        print("Path to download : "+pathFileToDownload)
+
         f = open(tmpfolderRetrieveSoftware+"/"+tail, "wb")
         f.write(get_body_tape)
         f.close()
@@ -481,24 +481,25 @@ def CheckZip(filename):
         return 0
     return 1
 
-def CheckDsk(download_platform_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
-    extension=download_platform_software[-3:].lower()
+def CheckDsk(download_software,download_platform_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy):
+    extension=download_software[-3:].lower()
+    print("Checkdisk : "+download_software+" ext :"+extension)
     if extension=="dsk":
 
         match = re.search('J', download_platform_software)
 
-        print("[DSK] download_platform_software : "+download_platform_software+" flags : "+download_platform_software)
+        print("[DSK] download_software : "+download_software+" flags : "+download_platform_software)
         if match:
             # Jasmin
             print ('[DSK] jasmin/ftdos dsk file')
-            BuildDsk(download_platform_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+            BuildDsk(download_software,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             return 0
 
         match = re.search('S', download_platform_software)
         if match:
             # Sedoric
             print ('[DSK] Sedoric dsk file')
-            BuildDsk(download_platform_software,letter,destsedoric,destetcsedoric,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
+            BuildDsk(download_software,letter,destsedoric,destetcsedoric,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)
             return 0
     return 1
 
@@ -596,15 +597,16 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
 
 
     if download_file!="":
+
         print("Download file : "+download_file)
-        print("Retrieve download file "+download_file+" to : "+tmpfolderRetrieveSoftware)
+        print("[download_file] Retrieve download file "+download_file+" to : "+tmpfolderRetrieveSoftware)
         RetriveSoftwareInTmpFolder(download_file,tmpfolderRetrieveSoftware)
         extension=download_file[-3:].lower()
         head, tail = os.path.split(download_file)
         letter=tail[0:1].lower()
 
         CreateTargetFolder(dest,destetc,letter)
-        print("###########################################################################################")
+
         print("[DOWNLOAD_"+str(id_download)+"] Generating : "+name_software+"/"+id_software)
         filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
         print("Split with dot : "+filenametap)
@@ -637,7 +639,7 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
             print("[ZIP][DOWNLOAD_"+str(id_download)+"] zip (Skipping) id_software :"+id_software)
             return ""
 
-        if CheckDsk(download_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
+        if CheckDsk(download_file,download_platform,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
             print("[DSK][DOWNLOAD_"+str(id_download)+"] Id_software:"+id_software)
             return ""
 
@@ -713,10 +715,6 @@ def manage_download(download_file,download_platform,download_label,tmpfolderRetr
             #else:
             #    print("[TAPE][DOWNLOAD_1] Skipping first download trying second download : "+removeFrenchChars(name_software))
             #    skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_platform+" "+id_software+"\n"
-
-
-
-
 
 
 exist_ok=True
@@ -897,17 +895,21 @@ for i in range(len(datastore)):
         fire1_joy=datastore[i]["fire1_joy"]
         fire2_joy=datastore[i]["fire2_joy"]
         fire3_joy=0
-        #print(datastore[i])
-        #print(tapefile)
+
         if download_1_file!="":
+            print("##########################################"+name_software+"#################################################")
+            print("[download_1_file] Retrieve download file "+download_1_file+" to : "+tmpfolderRetrieveSoftware)
+            if tmpfolderRetrieveSoftware == "":
+                exit
             RetriveSoftwareInTmpFolder(download_1_file,tmpfolderRetrieveSoftware)
+
             extension=download_1_file[-3:].lower()
             head, tail = os.path.split(download_1_file)
             letter=tail[0:1].lower()
 
             CreateTargetFolder(dest,destetc,letter)
 
-            print("###########################################################################################")
+
             print("Generating : "+name_software+"/"+id_software)
             filenametap=tail.lower().replace(" ", "").replace("-", "").replace("_", "")
             tcnf=filenametap.split('.')
@@ -938,7 +940,7 @@ for i in range(len(datastore)):
                     print("[ZIP] seems to be a tape file but it's zipped")
                 print("[ZIP] zip (Skipping) id_software :"+id_software)
 
-            if CheckDsk(download_1_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
+            if CheckDsk(download_1_file,download_1_platform,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
                 print("[DSK] Id_software:"+id_software)
 
             matchRule=0
@@ -1028,7 +1030,6 @@ for i in range(len(datastore)):
                     print("[TAPE][DOWNLOAD_1] Skipping first download trying second download : "+removeFrenchChars(name_software))
                     skipping_list_error=skipping_list_error+"Skipping first download : "+removeFrenchChars(name_software)+"/Flags : "+download_1_platform+" "+id_software+"\n"
 
-
             if download_2_file!="":
                 extension=download_2_file[-3:].lower()
                 head, tail = os.path.split(download_2_file)
@@ -1040,6 +1041,7 @@ for i in range(len(datastore)):
                     filenametapext=tcnf[1]
                     filenametapbase=tcnf[0]
                     filenametap8bytesLength=filenametapbase[0:8]
+                    print("[download_2_file] Retrieve download file "+download_2_file+" to : "+tmpfolderRetrieveSoftware)
                     RetriveSoftwareInTmpFolder(download_2_file,tmpfolderRetrieveSoftware)
                     if not CheckZip(download_1_file)==0:
                         print("Download file 2 : "+download_2_file+" "+tmpfolderRetrieveSoftware)
@@ -1047,7 +1049,7 @@ for i in range(len(datastore)):
                     print("Orix version found")
                     flag='Z'
 
-                if CheckDsk(download_2_file,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
+                if CheckDsk(download_2_file,download_2_platform,letter,destftdos,destetcftdos,name_software,filenametap8bytesLength,tail,tmpfolderRetrieveSoftware,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy)==0:    
                     print("[DSK][download_2_file] Id_software:"+id_software)
 
                 if isRom(download_2_platform):
@@ -1129,6 +1131,9 @@ for i in range(len(datastore)):
             manage_download(download_6_file,download_6_platform,download_6_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,6)
             manage_download(download_7_file,download_7_platform,download_7_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,7)
             manage_download(download_8_file,download_8_platform,download_8_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,8)
+            manage_download(download_9_file,download_9_platform,download_9_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,9)
+            manage_download(download_10_file,download_10_platform,download_10_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,10)
+            manage_download(download_11_file,download_11_platform,download_11_label,tmpfolderRetrieveSoftware,name_software,id_software,date_software,programmer_software,junk_software,version_bin,rombasic11,fire2_joy,fire3_joy,down_joy,right_joy,left_joy,fire1_joy,up_joy,category_software,11)
 
 EOF=0xFF
 print("Write basic11 db"+str(number_of_software_basic11))
