@@ -5,3 +5,5 @@ orix/
 # Temporary
 *~
 /tmp/
+cache/
+*.log
