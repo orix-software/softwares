@@ -1038,7 +1038,7 @@ demos_number_of_db_part = 1
 write_db_file_v2("Write demos_db/nb v2 : .db ", nb_of_demo_v2, demos_number_of_db_part, destlauncher + "/" + basic_demos_db_v2, demos_db_str)
 
 utils_number_of_db_part = 1
-write_db_file_v2("Write utils_db/nb v2 : .db ", nb_of_tools_v2, utils_number_of_db_part, destlauncher + "/" +basic_utils_db_v2, utils_db_str)
+write_db_file_v2("Write utils_db/nb v2 : .db ", nb_of_utils_v2, utils_number_of_db_part, destlauncher + "/" +basic_utils_db_v2, utils_db_str)
 
 unsorted_number_of_db_part = 1
 write_db_file_v2("Write unsorted_db/nb v2 : .db ", nb_of_unsorted_v2, unsorted_number_of_db_part, destlauncher + "/" +basic_unsorted_db_v2, unsorted_db_str)
