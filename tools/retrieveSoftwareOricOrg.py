@@ -1040,8 +1040,8 @@ write_db_file_v2("Write demos_db/nb v2 : .db ", nb_of_demo_v2, demos_number_of_d
 utils_number_of_db_part = 1
 write_db_file_v2("Write utils_db/nb v2 : .db ", nb_of_utils_v2, utils_number_of_db_part, destlauncher + "/" +basic_utils_db_v2, utils_db_str)
 
-unsorted_number_of_db_part = 1
-write_db_file_v2("Write unsorted_db/nb v2 : .db ", nb_of_unsorted_v2, unsorted_number_of_db_part, destlauncher + "/" +basic_unsorted_db_v2, unsorted_db_str)
+# unsorted_number_of_db_part = 1
+# write_db_file_v2("Write unsorted_db/nb v2 : .db ", nb_of_unsorted_v2, unsorted_number_of_db_part, destlauncher + "/" +basic_unsorted_db_v2, unsorted_db_str)
 
 music_number_of_db_part = 1
 write_db_file_v2("Write basic_music_db/nb v2 : .db ", nb_of_music_v2, music_number_of_db_part,destlauncher + "/"+ basic_music_db_v2, music_db_str)
