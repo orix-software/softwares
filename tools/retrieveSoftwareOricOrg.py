@@ -160,7 +160,7 @@ def fileToExecuteTruncateTo8Letters(filename):
 
     return filenametap8bytesLength.upper()
 
-def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platform_software):
+def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platform_software) -> int:
     name_software = tsoftware["name_software"]
     date_software = tsoftware["date_software"]
     programmer_software = tsoftware["programmer_software"]
@@ -239,7 +239,12 @@ def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platfo
         crl.setopt(crl.WRITEDATA, b_obj)
 
         # Perform a file transfer
-        crl.perform()
+        try:
+            crl.perform()
+        except pycurl.error as e:
+            # Gestion des exceptions Curl
+            print("Erreur Curl :", e)
+            return 1
 
         # End curl session
         crl.close()
@@ -287,20 +292,30 @@ def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platfo
     md_bin = bytearray(md_software,'ascii')
     f.write(md_bin)
     f.close()
+    return 0
+
 
 def BuildDsk(tsoftware, platform_software, letter, destpath, destetc, filenametap8bytesLength, tail, tmpfolderRetrieveSoftware, version_bin, rombasic11):
     name_software = tsoftware["name_software"]
     date_software = tsoftware["date_software"]
     programmer_software = tsoftware["programmer_software"]
     junk_software = tsoftware["junk_software"]
-
+    nb_curl_error = 0
     CreateTargetFolder(destpath, destetc,letter)
     print("[DSK]Copying dsk : " + tmpfolderRetrieveSoftware + tail  + " into :"+destpath + "/"+ letter +"/"+filenametap8bytesLength+".dsk" )
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+ "/" +letter+"/"+ filenametap8bytesLength+".dsk" )
     os.remove(tmpfolderRetrieveSoftware + tail)
     if not os.path.exists(destetc + "/"+ letter):
         os.mkdir(destetc+"/" + letter)
-    buildMdFile(tsoftware, filenametap8bytesLength, destpath, letter, platform_software)
+
+    while (buildMdFile(tsoftware, filenametap8bytesLength, destpath, letter, platform_software) == 1):
+        print(f"Retry curl buildMdFile ... { nb_curl_error }")
+        nb_curl_error = nb_curl_error + 1
+        if nb_curl_error == 20:
+            print("Exiting curl")
+            exit()
+
+
     buildDbFileSoftwareSingle(tsoftware, destetc,letter, filenametap8bytesLength, version_bin,rombasic11)
 
 def BuildTape(tsoftware, tmpfolderRetrieveSoftware, tail, dest, letter,filenametap8bytesLength,filenametapext,destroot,destetc,download_platform_software,version_bin,rombasic11):
@@ -324,7 +339,14 @@ def BuildTape(tsoftware, tmpfolderRetrieveSoftware, tail, dest, letter,filenamet
     if not os.path.exists(destetc + "/" + letter):
         os.mkdir(destetc + "/" + letter)
     print("Writing in db file rom id : ", str(rombasic11))
-    buildMdFile(tsoftware, filenametap8bytesLength, dest, letter, download_platform_software)
+
+    while (buildMdFile(tsoftware, filenametap8bytesLength, dest, letter, download_platform_software) == 1):
+        print(f"Retry curl buildMdFile ... { nb_curl_error }")
+        nb_curl_error = nb_curl_error + 1
+        if nb_curl_error == 20:
+            print("Exiting curl")
+            exit()
+
     buildDbFileSoftwareSingle(tsoftware, destetc, letter, filenametap8bytesLength, version_bin, rombasic11)
 
 def CheckTape(tsoftware, filename, tmpfolderRetrieveSoftware, tail, dest, letter, filenametap8bytesLength, filenametapext, destroot, destetc, download_platform_software, version_bin, rombasic11):
