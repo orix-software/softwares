@@ -474,10 +474,10 @@ def manage_download(tsoftware, download_file, download_platform, download_label,
         print(f"[download_file] Retrieve download file { download_file } to { tmpfolderRetrieveSoftware }")
 
         while (RetrieveSoftwareInTmpFolder(download_file, tmpfolderRetrieveSoftware) == 1):
-            print("Retry curl ... ")
+            print(f"Retry curl ... { nb_curl_error }")
             nb_curl_error = nb_curl_error + 1
             if nb_curl_error == 20:
-                print("Exitint furl")
+                print("Exiting curl")
                 exit()
 
         extension = getFileExtension(download_file)
@@ -717,6 +717,8 @@ for i in range(len(datastore)):
 
         rombasic11 = datastore[i]["basic11_ROM_TWILIGHTE"]
 
+        nb_curl_error = 0
+
         if download_1_file != "":
             print(f"########################################## { name_software } : { id_software } #################################################")
             print("[download_1_file] Retrieve download file " +download_1_file+" to : " + tmpfolderRetrieveSoftware)
@@ -730,8 +732,6 @@ for i in range(len(datastore)):
                 if nb_curl_error == 20:
                     print("Exiting curl")
                     exit()
-
-            RetrieveSoftwareInTmpFolder(download_1_file, tmpfolderRetrieveSoftware)
 
             extension=download_1_file[-3:].lower()
             head, tail = os.path.split(download_1_file)
