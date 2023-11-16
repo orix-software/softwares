@@ -474,8 +474,10 @@ def manage_download(tsoftware, download_file, download_platform, download_label,
         print(f"[download_file] Retrieve download file { download_file } to { tmpfolderRetrieveSoftware }")
 
         while (RetrieveSoftwareInTmpFolder(download_file, tmpfolderRetrieveSoftware) == 1):
-            nb_curl_error = nb_curl_error + 1 
+            print("Retry curl ... ")
+            nb_curl_error = nb_curl_error + 1
             if nb_curl_error == 20:
+                print("Exitint furl")
                 exit()
 
         extension = getFileExtension(download_file)
@@ -721,6 +723,14 @@ for i in range(len(datastore)):
             if tmpfolderRetrieveSoftware == "":
                 print(f"Error { tmpfolderRetrieveSoftware } is empty")
                 exit
+
+            while (RetrieveSoftwareInTmpFolder(download_1_file, tmpfolderRetrieveSoftware) == 1):
+                print(f"Retry curl (download_1_file) ... -> {nb_curl_error}")
+                nb_curl_error = nb_curl_error + 1
+                if nb_curl_error == 20:
+                    print("Exiting curl")
+                    exit()
+
             RetrieveSoftwareInTmpFolder(download_1_file, tmpfolderRetrieveSoftware)
 
             extension=download_1_file[-3:].lower()
