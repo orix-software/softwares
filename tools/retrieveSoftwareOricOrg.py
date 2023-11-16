@@ -467,10 +467,17 @@ def manage_download(tsoftware, download_file, download_platform, download_label,
     programmer_software = tsoftware["programmer_software"]
     category_software = tsoftware["category_software"]
 
+    nb_curl_error = 0
+
     if download_file != "":
         print(f"Download file : { download_file }")
         print(f"[download_file] Retrieve download file { download_file } to { tmpfolderRetrieveSoftware }")
-        RetrieveSoftwareInTmpFolder(download_file, tmpfolderRetrieveSoftware)
+
+        while (RetrieveSoftwareInTmpFolder(download_file, tmpfolderRetrieveSoftware) == 1):
+            nb_curl_error = nb_curl_error + 1 
+            if nb_curl_error == 20:
+                exit()
+
         extension = getFileExtension(download_file)
         head, tail = os.path.split(download_file)
         letter = tail[0:1].lower()
