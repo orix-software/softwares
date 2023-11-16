@@ -880,7 +880,14 @@ for i in range(len(datastore)):
                     filenametapbase = tcnf[0]
                     filenametap8bytesLength = filenametapbase[0:8]
                     print(f"[download_2_file] Retrieve download file { download_2_file } to : { tmpfolderRetrieveSoftware}")
-                    RetrieveSoftwareInTmpFolder(download_2_file, tmpfolderRetrieveSoftware)
+
+                    while (RetrieveSoftwareInTmpFolder(download_2_file, tmpfolderRetrieveSoftware) == 1):
+                        print(f"Retry curl (download_2_file) ... -> {nb_curl_error}")
+                        nb_curl_error = nb_curl_error + 1
+                        if nb_curl_error == 20:
+                            print("Exiting curl")
+                            exit()
+
                     if not CheckZip(download_1_file) == 0:
                         print(f"Download file 2 : { download_2_file } { tmpfolderRetrieveSoftware }")
                 else:
