@@ -34,7 +34,7 @@ def get_all_software_from_oric_org():
     datastore = json.loads(get_body.decode('utf8'))
     return datastore
 
-def RetrieveSoftwareInTmpFolder(pathFileToDownload, tmpfolderRetrieveSoftware):
+def RetrieveSoftwareInTmpFolder(pathFileToDownload, tmpfolderRetrieveSoftware) -> int:
 
     head, tail = os.path.split(pathFileToDownload)
 
@@ -65,8 +65,12 @@ def RetrieveSoftwareInTmpFolder(pathFileToDownload, tmpfolderRetrieveSoftware):
     crl_tape.setopt(crl_tape.WRITEDATA, b_obj_tape)
 
     # Perform a file transfer
-    crl_tape.perform()
-
+    try:
+        crl_tape.perform()
+    except pycurl.error as e:
+        # Gestion des exceptions Curl
+        print("Erreur Curl :", e)
+        return 1
     # End curl session
     crl_tape.close()
 
@@ -84,3 +88,4 @@ def RetrieveSoftwareInTmpFolder(pathFileToDownload, tmpfolderRetrieveSoftware):
     f = open("cache/softwares/"+tail, "wb")
     f.write(get_body_tape)
     f.close()
+    return 0
