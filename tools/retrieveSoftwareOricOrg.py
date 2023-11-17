@@ -300,13 +300,15 @@ def BuildDsk(tsoftware, platform_software, letter, destpath, destetc, filenameta
     date_software = tsoftware["date_software"]
     programmer_software = tsoftware["programmer_software"]
     junk_software = tsoftware["junk_software"]
-    nb_curl_error = 0
+
     CreateTargetFolder(destpath, destetc,letter)
     print("[DSK]Copying dsk : " + tmpfolderRetrieveSoftware + tail  + " into :"+destpath + "/"+ letter +"/"+filenametap8bytesLength+".dsk" )
     copyfile(tmpfolderRetrieveSoftware+tail,destpath+ "/" +letter+"/"+ filenametap8bytesLength+".dsk" )
     os.remove(tmpfolderRetrieveSoftware + tail)
     if not os.path.exists(destetc + "/"+ letter):
         os.mkdir(destetc+"/" + letter)
+
+    nb_curl_error = 0
 
     while (buildMdFile(tsoftware, filenametap8bytesLength, destpath, letter, platform_software) == 1):
         print(f"Retry curl buildMdFile ... { nb_curl_error }")
@@ -339,6 +341,8 @@ def BuildTape(tsoftware, tmpfolderRetrieveSoftware, tail, dest, letter,filenamet
     if not os.path.exists(destetc + "/" + letter):
         os.mkdir(destetc + "/" + letter)
     print("Writing in db file rom id : ", str(rombasic11))
+
+    nb_curl_error = 0
 
     while (buildMdFile(tsoftware, filenametap8bytesLength, dest, letter, download_platform_software) == 1):
         print(f"Retry curl buildMdFile ... { nb_curl_error }")
