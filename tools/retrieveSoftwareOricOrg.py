@@ -160,7 +160,7 @@ def fileToExecuteTruncateTo8Letters(filename):
 
     return filenametap8bytesLength.upper()
 
-def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platform_software):
+def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platform_software) -> int:
     name_software = tsoftware["name_software"]
     date_software = tsoftware["date_software"]
     programmer_software = tsoftware["programmer_software"]
@@ -239,7 +239,12 @@ def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platfo
         crl.setopt(crl.WRITEDATA, b_obj)
 
         # Perform a file transfer
-        crl.perform()
+        try:
+            crl.perform()
+        except pycurl.error as e:
+            # Gestion des exceptions Curl
+            print("Erreur Curl :", e)
+            return 1
 
         # End curl session
         crl.close()
@@ -287,6 +292,8 @@ def buildMdFile(tsoftware, filenametap8bytesLength, dest,letter, download_platfo
     md_bin = bytearray(md_software,'ascii')
     f.write(md_bin)
     f.close()
+    return 0
+
 
 def BuildDsk(tsoftware, platform_software, letter, destpath, destetc, filenametap8bytesLength, tail, tmpfolderRetrieveSoftware, version_bin, rombasic11):
     name_software = tsoftware["name_software"]
@@ -300,7 +307,17 @@ def BuildDsk(tsoftware, platform_software, letter, destpath, destetc, filenameta
     os.remove(tmpfolderRetrieveSoftware + tail)
     if not os.path.exists(destetc + "/"+ letter):
         os.mkdir(destetc+"/" + letter)
-    buildMdFile(tsoftware, filenametap8bytesLength, destpath, letter, platform_software)
+
+    nb_curl_error = 0
+
+    while (buildMdFile(tsoftware, filenametap8bytesLength, destpath, letter, platform_software) == 1):
+        print(f"Retry curl buildMdFile ... { nb_curl_error }")
+        nb_curl_error = nb_curl_error + 1
+        if nb_curl_error == 20:
+            print("Exiting curl")
+            exit()
+
+
     buildDbFileSoftwareSingle(tsoftware, destetc,letter, filenametap8bytesLength, version_bin,rombasic11)
 
 def BuildTape(tsoftware, tmpfolderRetrieveSoftware, tail, dest, letter,filenametap8bytesLength,filenametapext,destroot,destetc,download_platform_software,version_bin,rombasic11):
@@ -324,7 +341,16 @@ def BuildTape(tsoftware, tmpfolderRetrieveSoftware, tail, dest, letter,filenamet
     if not os.path.exists(destetc + "/" + letter):
         os.mkdir(destetc + "/" + letter)
     print("Writing in db file rom id : ", str(rombasic11))
-    buildMdFile(tsoftware, filenametap8bytesLength, dest, letter, download_platform_software)
+
+    nb_curl_error = 0
+
+    while (buildMdFile(tsoftware, filenametap8bytesLength, dest, letter, download_platform_software) == 1):
+        print(f"Retry curl buildMdFile ... { nb_curl_error }")
+        nb_curl_error = nb_curl_error + 1
+        if nb_curl_error == 20:
+            print("Exiting curl")
+            exit()
+
     buildDbFileSoftwareSingle(tsoftware, destetc, letter, filenametap8bytesLength, version_bin, rombasic11)
 
 def CheckTape(tsoftware, filename, tmpfolderRetrieveSoftware, tail, dest, letter, filenametap8bytesLength, filenametapext, destroot, destetc, download_platform_software, version_bin, rombasic11):
@@ -474,10 +500,10 @@ def manage_download(tsoftware, download_file, download_platform, download_label,
         print(f"[download_file] Retrieve download file { download_file } to { tmpfolderRetrieveSoftware }")
 
         while (RetrieveSoftwareInTmpFolder(download_file, tmpfolderRetrieveSoftware) == 1):
-            print("Retry curl ... ")
+            print(f"Retry curl ... { nb_curl_error }")
             nb_curl_error = nb_curl_error + 1
             if nb_curl_error == 20:
-                print("Exitint furl")
+                print("Exiting curl")
                 exit()
 
         extension = getFileExtension(download_file)
@@ -717,6 +743,8 @@ for i in range(len(datastore)):
 
         rombasic11 = datastore[i]["basic11_ROM_TWILIGHTE"]
 
+        nb_curl_error = 0
+
         if download_1_file != "":
             print(f"########################################## { name_software } : { id_software } #################################################")
             print("[download_1_file] Retrieve download file " +download_1_file+" to : " + tmpfolderRetrieveSoftware)
@@ -730,8 +758,6 @@ for i in range(len(datastore)):
                 if nb_curl_error == 20:
                     print("Exiting curl")
                     exit()
-
-            RetrieveSoftwareInTmpFolder(download_1_file, tmpfolderRetrieveSoftware)
 
             extension=download_1_file[-3:].lower()
             head, tail = os.path.split(download_1_file)
@@ -880,7 +906,14 @@ for i in range(len(datastore)):
                     filenametapbase = tcnf[0]
                     filenametap8bytesLength = filenametapbase[0:8]
                     print(f"[download_2_file] Retrieve download file { download_2_file } to : { tmpfolderRetrieveSoftware}")
-                    RetrieveSoftwareInTmpFolder(download_2_file, tmpfolderRetrieveSoftware)
+
+                    while (RetrieveSoftwareInTmpFolder(download_2_file, tmpfolderRetrieveSoftware) == 1):
+                        print(f"Retry curl (download_2_file) ... -> {nb_curl_error}")
+                        nb_curl_error = nb_curl_error + 1
+                        if nb_curl_error == 20:
+                            print("Exiting curl")
+                            exit()
+
                     if not CheckZip(download_1_file) == 0:
                         print(f"Download file 2 : { download_2_file } { tmpfolderRetrieveSoftware }")
                 else:
